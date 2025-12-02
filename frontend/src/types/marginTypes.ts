@@ -1,4 +1,3 @@
-// 상품 상세 정보
 export interface ItemInfo {
   title: string;
   price: number;
@@ -8,32 +7,41 @@ export interface ItemInfo {
   url: string;
 }
 
-// 플랫폼 가격 정보
 export interface PlatformPrice {
   priceJpy: number | null;
   priceKrw: number | null;
   items: ItemInfo[];
 }
 
-// AI 분석 정보 (백엔드 응답 그대로 반영)
-export interface AiDetail {
-  buyPlatform: string;
-  sellPlatform: string;
-  profitKrw: number;
-  profitRate: number;
-  reason: string; // basic ai summary
-  text: string;   // premium ai markdown
+export interface PlatformRaw {
+  platform: string;
+  productName: string | null;
+  productUrl: string | null;
+  productImage: string | null;
+  priceOriginal: number | null;
+  priceConverted: number | null;
 }
 
-// 전체 응답 스키마
+export interface AiDetail {
+  reason: string;
+  text: string;
+}
+
 export interface MarginResponse {
+  keyword: string;
+  lang: string;
+
   platformPrices: {
-    amazonJp: PlatformPrice;
-    rakuten: PlatformPrice;
-    naver: PlatformPrice;
-    coupang: PlatformPrice;
+    amazonJp: PlatformRaw;
+    rakuten: PlatformRaw;
+    naver: PlatformRaw;
+    coupang: PlatformRaw;
   };
+
   basicAi: AiDetail;
   premiumAi: AiDetail;
+
   bestPlatform: string;
+  profitKrw: number;
+  profitJpy: number;
 }

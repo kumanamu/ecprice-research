@@ -1,121 +1,57 @@
 import { useState } from "react";
-import SearchBar from "../components/SearchBar";
-import ToggleLanguage from "../components/ToggleLanguage";
-import TogglePremium from "../components/TogglePremium";
-import PlatformCard from "../components/PlatformCard";
-import ProductList from "../components/ProductList";
-import AnalysisBox from "../components/AnalysisBox";
+import MainLayout from "../components/layout/MainLayout";
+import SearchBar from "../components/search/SearchBar";
+import ToggleLanguage from "../components/search/ToggleLanguage";
+import TogglePremium from "../components/search/TogglePremium";
 
-import { getMarginResult } from "../api/marginapi";
-import type { MarginResponse } from "../types/marginTypes";
+import PriceSection from "../components/price/PriceSection";
+import ProductList from "../components/price/ProductList";
+import ReportPanel from "../components/layout/ReportPanel";
 
-const emptyResult: MarginResponse = {
-  platformPrices: {
-    amazonJp: { priceJpy: null, priceKrw: null, items: [] },
-    rakuten: { priceJpy: null, priceKrw: null, items: [] },
-    naver: { priceJpy: null, priceKrw: null, items: [] },
-    coupang: { priceJpy: null, priceKrw: null, items: [] }
-  },
-  basicAi: {
-    buyPlatform: "",
-    sellPlatform: "",
-    profitKrw: 0,
-    profitRate: 0,
-    reason: "",
-    text: ""
-  },
-  premiumAi: {
-    buyPlatform: "",
-    sellPlatform: "",
-    profitKrw: 0,
-    profitRate: 0,
-    reason: "",
-    text: ""
-  },
-  bestPlatform: ""
-};
+import { MarginResponse } from "../types/marginTypes";
 
 export default function Home() {
-  const [result, setResult] = useState<MarginResponse>(emptyResult);
-  const [loading, setLoading] = useState(false);
+  const [keyword, setKeyword] = useState("");
   const [lang, setLang] = useState<"ko" | "jp">("ko");
   const [premium, setPremium] = useState(false);
 
-  const search = async (keyword: string) => {
-    try {
-      setLoading(true);
-      const data = await getMarginResult(keyword, lang);
-      setResult(data);
-    } catch (e) {
-      console.error(e);
-      alert("검색 오류 발생!");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [data, setData] = useState<MarginResponse | null>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-800 to-purple-700 p-6 text-white">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">ECPriceResearch</h1>
+    <MainLayout>
+      {/* 왼쪽 영역 */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+          paddingRight: "20px",
+        }}
+      >
+        {/* 검색 섹션 */}
+        <SearchBar
+          keyword={keyword}
+          setKeyword={setKeyword}
+          setData={setData}
+          lang={lang}
+          premium={premium}
+        />
 
-        <SearchBar onSearch={search} lang={lang} />
-        <ToggleLanguage lang={lang} setLang={setLang} />
-        <TogglePremium premium={premium} setPremium={setPremium} />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <ToggleLanguage lang={lang} setLang={setLang} />
+          <TogglePremium premium={premium} setPremium={setPremium} />
+        </div>
 
-        {loading && (
-          <div className="mt-6 text-center">
-            <label>{"검색중..."}</label>
-          </div>
-        )}
+        {/* 가격 비교 */}
+        <PriceSection data={data} />
 
-        {!loading && (
-          <>
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PlatformCard
-                title="아마존 JP"
-                info={result.platformPrices.amazonJp}
-                highlight={result.bestPlatform === "amazonJp"}
-              />
-
-              <PlatformCard
-                title="라쿠텐"
-                info={result.platformPrices.rakuten}
-                highlight={result.bestPlatform === "rakuten"}
-              />
-
-              <PlatformCard
-                title="Naver"
-                info={result.platformPrices.naver}
-                highlight={result.bestPlatform === "naver"}
-              />
-
-              <PlatformCard
-                title="Coupang"
-                info={result.platformPrices.coupang}
-                highlight={result.bestPlatform === "coupang"}
-              />
-            </div>
-
-            {/* 상품 리스트 */}
-            <ProductList info={result.platformPrices.amazonJp.items} />
-            <ProductList info={result.platformPrices.rakuten.items} />
-            <ProductList info={result.platformPrices.naver.items} />
-            <ProductList info={result.platformPrices.coupang.items} />
-
-            {/* AI 분석 */}
-            <AnalysisBox
-              title="Basic AI 분석"
-              detail={result.basicAi.reason || result.basicAi.text}
-            />
-
-            <AnalysisBox
-              title="Premium AI 분석"
-              detail={premium ? (result.premiumAi.text || result.premiumAi.reason) : ""}
-            />
-          </>
-        )}
+        {/* 상품 리스트 */}
+        <ProductList data={data} />
       </div>
-    </div>
+
+      {/* 오른쪽: 보고서 패널 (AI 분석 결과) */}
+      <ReportPanel data={data} premium={premium} />
+    </MainLayout>
   );
 }
