@@ -1,23 +1,21 @@
-import type { PlatformRaw, PlatformPrice } from "../types/marginTypes";
+// src/utils/convert.ts
 
-export function convertToPlatformPrice(raw: PlatformRaw): PlatformPrice {
-  return {
-    priceJpy: raw.priceConverted,
-    priceKrw: raw.priceOriginal,
-    items: raw.productName
-      ? [
-          {
-            title: raw.productName,
-            price: raw.priceConverted ?? 0,
-            rawPrice: raw.priceOriginal ?? 0,
-            currency:
-              raw.platform === "AMAZON_JP" || raw.platform === "RAKUTEN"
-                ? "JPY"
-                : "KRW",
-            image: raw.productImage ?? "",
-            url: raw.productUrl ?? "",
-          },
-        ]
-      : [],
-  };
+export function formatKrw(value: number | null | undefined): string {
+  if (value == null) return "-";
+  return value.toLocaleString("ko-KR") + "원";
+}
+
+export function formatJpy(value: number | null | undefined): string {
+  if (value == null) return "-";
+  return "¥" + value.toLocaleString("ja-JP");
+}
+
+export function safeNumber(value: any): number {
+  if (value == null || isNaN(value)) return 0;
+  return Number(value);
+}
+
+export function safeText(value: any): string {
+  if (value == null || value === "") return "-";
+  return String(value);
 }

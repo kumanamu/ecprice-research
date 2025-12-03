@@ -1,57 +1,80 @@
-import { useState } from "react";
-import MainLayout from "../components/layout/MainLayout";
+import React, { useState } from "react";
 import SearchBar from "../components/search/SearchBar";
 import ToggleLanguage from "../components/search/ToggleLanguage";
 import TogglePremium from "../components/search/TogglePremium";
-
-import PriceSection from "../components/price/PriceSection";
-import ProductList from "../components/price/ProductList";
 import ReportPanel from "../components/layout/ReportPanel";
 
-import { MarginResponse } from "../types/marginTypes";
+
+import { getMarginResult } from "../api/marginapi";
+import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
+  from "../types/marginTypes";
 
 export default function Home() {
   const [keyword, setKeyword] = useState("");
   const [lang, setLang] = useState<"ko" | "jp">("ko");
-  const [premium, setPremium] = useState(false);
+  const [type, setType] = useState<"basic" | "premium">("basic");
 
-  const [data, setData] = useState<MarginResponse | null>(null);
+  const [step, setStep] = useState<"" | "step1" | "step2" | "step3">("");
+  const [result, setResult] = useState<MarginResponse | null>(null);
+
+  const handleSearch = async () => {
+    if (!keyword.trim()) {
+      alert(lang === "ko" ? "검색어를 입력하세요." : "検索ワードを入力してください。");
+      return;
+    }
+
+    setStep("step1");
+    setResult(null);
+
+    try {
+      const res = await getMarginResult(keyword, lang);
+
+      setTimeout(() => setStep("step2"), 300);
+      setTimeout(() => setStep("step3"), 600);
+
+      setResult(res);
+    } catch (err) {
+      console.error(err);
+      alert(lang === "ko" ? "검색 실패!" : "検索失敗！");
+      setStep("");
+    }
+  };
 
   return (
-    <MainLayout>
-      {/* 왼쪽 영역 */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          paddingRight: "20px",
-        }}
-      >
-        {/* 검색 섹션 */}
-        <SearchBar
-          keyword={keyword}
-          setKeyword={setKeyword}
-          setData={setData}
-          lang={lang}
-          premium={premium}
-        />
+    <div className="flex flex-col gap-6 w-full">
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <ToggleLanguage lang={lang} setLang={setLang} />
-          <TogglePremium premium={premium} setPremium={setPremium} />
-        </div>
+      {/* 검색바 */}
+      <SearchBar
+        keyword={keyword}
+        onKeywordChange={setKeyword}
+        onSearch={handleSearch}
+        lang={lang}
+      />
 
-        {/* 가격 비교 */}
-        <PriceSection data={data} />
-
-        {/* 상품 리스트 */}
-        <ProductList data={data} />
+      {/* 언어 + 프리미엄 */}
+      <div className="flex gap-4">
+        <ToggleLanguage lang={lang} onChange={setLang} />
+        <TogglePremium type={type} onChange={setType} />
       </div>
 
-      {/* 오른쪽: 보고서 패널 (AI 분석 결과) */}
-      <ReportPanel data={data} premium={premium} />
-    </MainLayout>
+      {/* 로딩 상태 */}
+      {step && (
+        <div className="bg-gray-100 p-4 rounded text-center animate-pulse shadow">
+          {step === "step1" && (lang === "ko" ? "🔍 초기 요청 중..." : "初期リクエスト中...")}
+          {step === "step2" && (lang === "ko" ? "📦 가격 데이터 준비 중..." : "価格データ準備中...")}
+          {step === "step3" && (lang === "ko" ? "🤖 AI 분석 준비 중..." : "AI分析準備中...")}
+        </div>
+      )}
+
+      {/* 분석 결과 */}
+      {result && (
+        <ReportPanel
+          data={result}
+          type={type}
+          lang={lang}
+          step={step}
+        />
+      )}
+    </div>
   );
 }

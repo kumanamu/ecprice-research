@@ -1,33 +1,31 @@
-import { useState } from "react";
+// src/components/search/SearchBar.tsx
+import React from "react";
+import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
+  from "../../types/marginTypes";
 
-interface SearchBarProps {
-  onSearch: (keyword: string) => void;
+interface Props {
+  keyword: string;
+  onKeywordChange: (v: string) => void;
+  onSearch: () => void;
   lang: "ko" | "jp";
 }
 
-export default function SearchBar({ onSearch, lang }: SearchBarProps) {
-  const [keyword, setKeyword] = useState("");
-
-  const label = (ko: string, jp: string) => (lang === "ko" ? ko : jp);
-
-  const submit = (e: any) => {
-    e.preventDefault();
-    if (!keyword.trim()) return;
-    onSearch(keyword);
-  };
-
+export default function SearchBar({ keyword, onKeywordChange, onSearch, lang }: Props) {
   return (
-    <form onSubmit={submit} className="flex gap-2 mb-4 w-full">
+    <div className="flex gap-3 items-center w-full">
       <input
-        type="text"
         value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        placeholder={label("검색어를 입력...", "検索ワードを入力...")}
-        className="w-full p-2 rounded-lg text-black"
+        onChange={(e) => onKeywordChange(e.target.value)}
+        placeholder={lang === "ko" ? "검색어 입력" : "検索ワード入力"}
+        className="border p-2 flex-1 rounded-lg shadow-sm"
       />
-      <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg">
-        {label("검색", "検索")}
+
+      <button
+        onClick={onSearch}
+        className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow"
+      >
+        {lang === "ko" ? "검색" : "検索"}
       </button>
-    </form>
+    </div>
   );
 }

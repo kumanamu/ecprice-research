@@ -1,24 +1,20 @@
+// src/components/search/TogglePremium.tsx
+import React from "react";
+import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
+  from "../../types/marginTypes";
+
 interface Props {
-  premium: boolean;
-  setPremium: (p: boolean) => void;
+  type: "basic" | "premium";
+  onChange: (v: "basic" | "premium") => void;
 }
 
-export default function TogglePremium({ premium, setPremium }: Props) {
+export default function TogglePremium({ type, onChange }: Props) {
   return (
-    <div className="flex gap-2 mb-6">
-      <button
-        className={`px-3 py-1 rounded ${!premium ? "bg-green-500 text-white" : "bg-gray-400"}`}
-        onClick={() => setPremium(false)}
-      >
-        Basic
-      </button>
-
-      <button
-        className={`px-3 py-1 rounded ${premium ? "bg-green-500 text-white" : "bg-gray-400"}`}
-        onClick={() => setPremium(true)}
-      >
-        Premium
-      </button>
-    </div>
+    <button
+      onClick={() => onChange(type === "basic" ? "premium" : "basic")}
+      className="px-4 py-2 bg-yellow-200 rounded-lg shadow font-semibold"
+    >
+      {type === "basic" ? "✨ 프리미엄" : "📘 기본 분석"}
+    </button>
   );
 }

@@ -1,47 +1,58 @@
-export interface ItemInfo {
-  title: string;
-  price: number;
-  rawPrice: number;
-  currency: string;
-  image: string;
-  url: string;
-}
-
-export interface PlatformPrice {
-  priceJpy: number | null;
-  priceKrw: number | null;
-  items: ItemInfo[];
-}
-
-export interface PlatformRaw {
+// ===============================
+// PriceInfo ← 백엔드 DTO 그대로
+// ===============================
+export interface PriceInfo {
   platform: string;
-  productName: string | null;
-  productUrl: string | null;
-  productImage: string | null;
+  productName: string;
+  productUrl: string;
+  productImage: string;
+
   priceOriginal: number | null;
-  priceConverted: number | null;
-}
+  shippingOriginal: number | null;
 
-export interface AiDetail {
+  currencyOriginal: string;
+
+  priceKrw: number | null;
+  priceJpy: number | null;
+  displayPrice: string;
+
+  status: string;
   reason: string;
-  text: string;
+
+  country: string;
+  timestamp: string;
 }
 
+// ===============================
+// AiMarginAnalysis ← 백 DTO 그대로
+// ===============================
+export interface AiMarginAnalysis {
+  buyPlatform: string;
+  sellPlatform: string;
+  profitKrw: number;
+  profitRate: number;
+
+  text: string;
+  reason: string;
+}
+
+// ===============================
+// MarginResponse ← 백 DTO 그대로
+// ===============================
 export interface MarginResponse {
   keyword: string;
-  lang: string;
+  lang: "ko" | "jp";
 
   platformPrices: {
-    amazonJp: PlatformRaw;
-    rakuten: PlatformRaw;
-    naver: PlatformRaw;
-    coupang: PlatformRaw;
+    [platform: string]: PriceInfo;
   };
-
-  basicAi: AiDetail;
-  premiumAi: AiDetail;
 
   bestPlatform: string;
   profitKrw: number;
   profitJpy: number;
+
+  jpyToKrw: number;
+
+  basicAi: AiMarginAnalysis;
+  premiumAi: AiMarginAnalysis;
 }
