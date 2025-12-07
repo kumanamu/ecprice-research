@@ -12,8 +12,13 @@ public class AiMarginAnalysis {
     private long profitKrw;
     private double profitRate;
 
-    private String text;      // 프론트에서 사용하는 필드
-    private String reason;    // 내부 로깅/요약용
+    // ✅ 한국어 분석 결과
+    private String textKo;
+
+    // ✅ 일본어 분석 결과
+    private String textJp;
+
+    private String reason;
 
     public String summary() {
         return "Buy: " + buyPlatform

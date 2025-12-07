@@ -1,19 +1,20 @@
 // src/api/marginapi.ts
 
-import axios from "axios";   // 🔥 빠져서 오류났던 부분
-import type { MarginResponse } from "../types/marginTypes";
+import api from "./api";
 
-const BASE_URL = "http://localhost:8080/api/margin";
+/** 🔥 병렬 플랫폼 API들 - (추가 코드) */
+export const fetchAmazon = (keyword: string, lang: string) =>
+  api.get("/margin/amazon", { params: { keyword, lang } });
 
-export async function getMarginResult(keyword: string, lang: "ko" | "jp") {
-  try {
-    const res = await axios.get<MarginResponse>(BASE_URL, {
-      params: { keyword, lang }
-    });
+export const fetchRakuten = (keyword: string, lang: string) =>
+  api.get("/margin/rakuten", { params: { keyword, lang } });
 
-    return res.data;
-  } catch (err) {
-    console.error("❌ API 오류:", err);
-    throw err;
-  }
-}
+export const fetchNaver = (keyword: string, lang: string) =>
+  api.get("/margin/naver", { params: { keyword, lang } });
+
+export const fetchCoupang = (keyword: string, lang: string) =>
+  api.get("/margin/coupang", { params: { keyword, lang } });
+
+/** 🔥 통합 compare API */
+export const fetchCompare = (keyword: string, lang: string) =>
+  api.get("/margin", { params: { keyword, lang } });

@@ -1,3 +1,4 @@
+// src/App.tsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";

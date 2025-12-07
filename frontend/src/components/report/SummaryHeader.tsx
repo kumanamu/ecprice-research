@@ -1,47 +1,34 @@
 // src/components/report/SummaryHeader.tsx
 import React from "react";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../../types/marginTypes";
+import { useLang } from "../../context/LangContext";
+import type { PriceInfo } from "../../types/marginTypes";
 
 interface Props {
-  platform: string;
-  profitKrw: number;
-  profitJpy: number;
-  lang: "ko" | "jp";
+  platformResults: Record<string, PriceInfo>;
 }
 
-export default function SummaryHeader({ platform, profitKrw, profitJpy, lang }: Props) {
+export default function SummaryHeader({ platformResults }: Props) {
+  const { lang } = useLang();
+
+  const platforms = Object.entries(platformResults);
+
+  if (platforms.length === 0) return null;
+
   return (
-    <div className="p-5 rounded-xl shadow bg-white">
-      <div className="text-xl font-bold mb-4">
-        {lang === "ko" ? "핵심 요약" : "主要サマリー"}
-      </div>
+    <div className="w-full bg-white border rounded p-4 shadow mb-4">
+      <h2 className="text-xl font-bold mb-2">
+        {lang === "jp" ? "プラットフォームの比較結果" : "플랫폼 비교 결과"}
+      </h2>
 
-      <div className="flex gap-12">
-
-        <div>
-          <div className="text-gray-500 text-sm">Platform</div>
-          <div className="font-bold text-lg">{platform}</div>
-        </div>
-
-        <div>
-          <div className="text-gray-500 text-sm">
-            {lang === "ko" ? "수익(KRW)" : "利益(KRW)"}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {platforms.map(([platform, info]) => (
+          <div key={platform} className="flex flex-col">
+            <span className="font-semibold">{platform}</span>
+            <span className="text-sm text-gray-600">
+              {info?.productName ?? "-"}
+            </span>
           </div>
-          <div className="font-bold text-lg">
-            {profitKrw.toLocaleString()}
-          </div>
-        </div>
-
-        <div>
-          <div className="text-gray-500 text-sm">
-            {lang === "ko" ? "수익(JPY)" : "利益(JPY)"}
-          </div>
-          <div className="font-bold text-lg">
-            {profitJpy.toLocaleString()}
-          </div>
-        </div>
-
+        ))}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 // src/components/report/PriceTable.tsx
 import React from "react";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../../types/marginTypes";
+import { t } from "../../utils/t";
+import type { PriceInfo } from "../../types/marginTypes";
 
 interface Props {
   prices: { [key: string]: PriceInfo };
@@ -13,13 +13,13 @@ export default function PriceTable({ prices, lang }: Props) {
     <div className="p-5 rounded-xl shadow bg-white">
 
       <h2 className="font-bold text-lg mb-4">
-        {lang === "ko" ? "플랫폼별 가격" : "プラットフォーム別価格"}
+        {t("platformPrice", lang)}
       </h2>
 
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b text-sm text-gray-500">
-            <th className="p-2">Platform</th>
+            <th className="p-2">{t("platform", lang)}</th>
             <th className="p-2">KRW</th>
             <th className="p-2">JPY</th>
           </tr>

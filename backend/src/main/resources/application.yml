@@ -3,10 +3,12 @@ spring:
     name: ecprice-research
 
   profiles:
-    active: local   # ← 로컬 실행 기본 프로필
+    active: local  # ← 로컬 개발 기본 프로필
 
 server:
   port: 8080
+  tomcat:
+    uri-encoding: UTF-8
 
 logging:
   level:

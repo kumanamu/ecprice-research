@@ -1,3 +1,5 @@
+// src/types/marginTypes.ts
+
 // ===============================
 // PriceInfo ← 백엔드 DTO 그대로
 // ===============================
@@ -24,7 +26,7 @@ export interface PriceInfo {
 }
 
 // ===============================
-// AiMarginAnalysis ← 백 DTO 그대로
+// AiMarginAnalysis ← ✅ 수정: textKo, textJp 추가
 // ===============================
 export interface AiMarginAnalysis {
   buyPlatform: string;
@@ -32,7 +34,9 @@ export interface AiMarginAnalysis {
   profitKrw: number;
   profitRate: number;
 
-  text: string;
+  textKo: string;  // ✅ 한국어 분석
+  textJp: string;  // ✅ 일본어 분석
+
   reason: string;
 }
 

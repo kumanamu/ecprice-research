@@ -1,20 +1,20 @@
-// src/components/search/ToggleLanguage.tsx
+// src/search/ToggleLanguage.tsx
 import React from "react";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../../types/marginTypes";
+import { useLang } from "../../context/LangContext";
 
-interface Props {
-  lang: "ko" | "jp";
-  onChange: (v: "ko" | "jp") => void;
-}
+export default function ToggleLanguage() {
+  const { lang, setLang } = useLang();
 
-export default function ToggleLanguage({ lang, onChange }: Props) {
+  const toggle = () => {
+    setLang(lang === "jp" ? "ko" : "jp");
+  };
+
   return (
     <button
-      onClick={() => onChange(lang === "ko" ? "jp" : "ko")}
-      className="px-4 py-2 bg-gray-200 rounded-lg shadow"
+      onClick={toggle}
+      className="px-3 py-1 border rounded-lg bg-white shadow text-sm"
     >
-      {lang === "ko" ? "🇰🇷 한국어" : "🇯🇵 日本語"}
+      {lang === "jp" ? "한국어 / 日本語" : "日本語 / 한국어"}
     </button>
   );
 }

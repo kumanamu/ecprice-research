@@ -1,25 +1,24 @@
+// src/components/common/Sidebar.tsx
 import React from "react";
-import { NavLink } from "react-router-dom";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../../types/marginTypes";
+import { Link } from "react-router-dom";
+import { useLang } from "../../context/LangContext";
 
 export default function Sidebar() {
+  const { lang } = useLang();
+
   return (
-    <aside className="w-56 bg-white shadow h-screen p-5 flex flex-col gap-4">
+    <aside className="w-56 bg-gray-100 h-screen flex flex-col p-6 border-r">
+      <h1 className="text-xl font-bold mb-6">ECPriceResearch</h1>
 
-      <NavLink
-        to="/"
-        className="px-3 py-2 rounded hover:bg-gray-100 font-medium"
-      >
-        홈
-      </NavLink>
+      <nav className="flex flex-col gap-4">
+        <Link to="/" className="hover:underline">
+          {lang === "jp" ? "ホーム" : "홈"}
+        </Link>
 
-      <NavLink
-        to="/report"
-        className="px-3 py-2 rounded hover:bg-gray-100 font-medium"
-      >
-        리포트
-      </NavLink>
+        <Link to="/report" className="hover:underline">
+          {lang === "jp" ? "レポート" : "리포트"}
+        </Link>
+      </nav>
     </aside>
   );
 }

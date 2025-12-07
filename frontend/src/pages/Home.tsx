@@ -1,80 +1,83 @@
 import React, { useState } from "react";
 import SearchBar from "../components/search/SearchBar";
-import ToggleLanguage from "../components/search/ToggleLanguage";
-import TogglePremium from "../components/search/TogglePremium";
-import ReportPanel from "../components/layout/ReportPanel";
+import SummaryHeader from "../components/report/SummaryHeader";
+import PlatformCards from "../components/report/PlatformCards";
+import Loader from "../components/common/Loader";
+import { useLang } from "../context/LangContext";
 
-
-import { getMarginResult } from "../api/marginapi";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../types/marginTypes";
-
-export default function Home() {
+const Home: React.FC = () => {
+  const { lang } = useLang();
   const [keyword, setKeyword] = useState("");
-  const [lang, setLang] = useState<"ko" | "jp">("ko");
-  const [type, setType] = useState<"basic" | "premium">("basic");
+  const [loading, setLoading] = useState(false);
 
-  const [step, setStep] = useState<"" | "step1" | "step2" | "step3">("");
-  const [result, setResult] = useState<MarginResponse | null>(null);
+  // 플랫폼별 수신 데이터
+  const [platformResults, setPlatformResults] = useState<any>({});
+  const [done, setDone] = useState(false);
 
-  const handleSearch = async () => {
-    if (!keyword.trim()) {
-      alert(lang === "ko" ? "검색어를 입력하세요." : "検索ワードを入力してください。");
-      return;
-    }
+  const onSearch = () => {
+  if (!keyword.trim()) return;
 
-    setStep("step1");
-    setResult(null);
+  console.log("🔥 SSE START keyword=", keyword, "lang=", lang);
 
-    try {
-      const res = await getMarginResult(keyword, lang);
+  setLoading(true);
+  setPlatformResults({});
 
-      setTimeout(() => setStep("step2"), 300);
-      setTimeout(() => setStep("step3"), 600);
+  // ❗ 절대 localhost:8080 쓰지 마라
+  const es = new EventSource(
+    `/api/margin/stream2?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
+  );
 
-      setResult(res);
-    } catch (err) {
-      console.error(err);
-      alert(lang === "ko" ? "검색 실패!" : "検索失敗！");
-      setStep("");
-    }
+  es.onopen = () => console.log("🔗 SSE CONNECTED");
+
+  es.onerror = (err) => {
+    console.error("❌ SSE ERROR", err);
+    es.close();
+    setLoading(false);
   };
 
-  return (
-    <div className="flex flex-col gap-6 w-full">
+  es.addEventListener("platform", (event) => {
+    const parsed = JSON.parse(event.data);
+    console.log("📨 PLATFORM DATA:", parsed);
 
-      {/* 검색바 */}
+    setPlatformResults((prev) => ({
+      ...prev,
+      [parsed.platform]: parsed.data,
+    }));
+  });
+
+  es.addEventListener("done", () => {
+    console.log("🏁 SSE DONE");
+    es.close();
+    setLoading(false);
+  });
+};
+
+  return (
+    <>
       <SearchBar
         keyword={keyword}
         onKeywordChange={setKeyword}
-        onSearch={handleSearch}
+        onSearch={onSearch}
         lang={lang}
       />
 
-      {/* 언어 + 프리미엄 */}
-      <div className="flex gap-4">
-        <ToggleLanguage lang={lang} onChange={setLang} />
-        <TogglePremium type={type} onChange={setType} />
-      </div>
+      {loading && <Loader label="데이터 수신 중..." />}
 
-      {/* 로딩 상태 */}
-      {step && (
-        <div className="bg-gray-100 p-4 rounded text-center animate-pulse shadow">
-          {step === "step1" && (lang === "ko" ? "🔍 초기 요청 중..." : "初期リクエスト中...")}
-          {step === "step2" && (lang === "ko" ? "📦 가격 데이터 준비 중..." : "価格データ準備中...")}
-          {step === "step3" && (lang === "ko" ? "🤖 AI 분석 준비 중..." : "AI分析準備中...")}
-        </div>
+      {/* 플랫폼 가격 카드 */}
+      {Object.keys(platformResults).length > 0 && (
+        <PlatformCards results={platformResults} />
       )}
 
-      {/* 분석 결과 */}
-      {result && (
-        <ReportPanel
-          data={result}
-          type={type}
+      {/* 가격 도착 후 요약 */}
+      {done && (
+        <SummaryHeader
+          platformResults={platformResults}
+          keyword={keyword}
           lang={lang}
-          step={step}
         />
       )}
-    </div>
+    </>
   );
-}
+};
+
+export default Home;

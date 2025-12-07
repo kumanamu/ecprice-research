@@ -1,40 +1,15 @@
-// src/components/ai/BasicReport.tsx
-import React from "react";
-import SummaryHeader from "../report/SummaryHeader";
-import PriceTable from "../report/PriceTable";
-import AIRecommendationCard from "../report/AIRecommendationCard";
-import type { PriceInfo, MarginResponse, AiMarginAnalysis } 
-  from "../../types/marginTypes";
+import { t } from "../../utils/t";
+import { translateAiText } from "../../utils/convert";
 
-interface Props {
-  data: MarginResponse;
-  lang: "ko" | "jp";
-}
+export default function BasicReport({ lang, data }) {
+  const tr = t(lang);
 
-export default function BasicReport({ data, lang }: Props) {
-  const prices = data.platformPrices ?? {};
-  const platform = data.bestPlatform ?? "-";
-  const profitKrw = data.profitKrw ?? 0;
-  const profitJpy = data.profitJpy ?? 0;
-  const basicText = data.basicAi?.text ?? "";
+  const text = translateAiText(data.basicAi?.text || "", lang);
 
   return (
-    <div className="flex flex-col gap-10 w-full mt-8">
-
-      <SummaryHeader
-        platform={platform}
-        profitKrw={profitKrw}
-        profitJpy={profitJpy}
-        lang={lang}
-      />
-
-      <PriceTable prices={prices} lang={lang} />
-
-      <AIRecommendationCard
-        basicText={basicText}
-        type="basic"
-        lang={lang}
-      />
+    <div className="p-4 bg-white rounded shadow my-4">
+      <h2 className="text-xl font-bold mb-4">{tr.basicTitle}</h2>
+      <pre className="whitespace-pre-wrap">{text}</pre>
     </div>
   );
 }
