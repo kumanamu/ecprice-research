@@ -38,9 +38,9 @@ rakuten:
     apiUrl: "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
 
 # ===================== 아마존 ====================
-serpapi:
+scraperapi:
   api:
-    key: "${SERPAPI_API_KEY}"
+    key: ${SCRAPER_API_KEY}
 
 # ===================== 환율 ====================
 exchange:

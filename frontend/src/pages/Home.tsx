@@ -1,56 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import SearchBar from "../components/search/SearchBar";
 import SummaryHeader from "../components/report/SummaryHeader";
 import PlatformCards from "../components/report/PlatformCards";
 import Loader from "../components/common/Loader";
 import { useLang } from "../context/LangContext";
+import type { MarginResponse, PriceInfo } from "../types/marginTypes";
 
 const Home: React.FC = () => {
   const { lang } = useLang();
+
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 플랫폼별 수신 데이터
-  const [platformResults, setPlatformResults] = useState<any>({});
-  const [done, setDone] = useState(false);
+  const [platformResults, setPlatformResults] = useState<Record<string, PriceInfo>>({});
+  const [finalResult, setFinalResult] = useState<MarginResponse | null>(null);
+
+  const platformRef = useRef<Record<string, PriceInfo>>({});
 
   const onSearch = () => {
-  if (!keyword.trim()) return;
+    if (!keyword.trim()) return;
 
-  console.log("🔥 SSE START keyword=", keyword, "lang=", lang);
+    setLoading(true);
+    setPlatformResults({});
+    platformRef.current = {};
+    setFinalResult(null);
 
-  setLoading(true);
-  setPlatformResults({});
+    const socket = new EventSource(
+      `/api/margin/stream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
+    );
 
-  // ❗ 절대 localhost:8080 쓰지 마라
-  const es = new EventSource(
-    `/api/margin/stream2?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
-  );
+    socket.addEventListener("platform", (event: MessageEvent) => {
+      const parsed = JSON.parse(event.data);
+      const platform = parsed.platform;
+      const data: PriceInfo = parsed.data;
 
-  es.onopen = () => console.log("🔗 SSE CONNECTED");
+      platformRef.current[platform] = data;
 
-  es.onerror = (err) => {
-    console.error("❌ SSE ERROR", err);
-    es.close();
-    setLoading(false);
+      setPlatformResults({ ...platformRef.current });
+    });
+
+    socket.addEventListener("done", () => {
+      socket.close();
+
+      const postBody = platformRef.current; // ← 구조 완전히 수정됨!
+
+      fetch(
+        `/api/margin/finalCompare?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postBody),
+        }
+      )
+        .then((res) => res.json())
+        .then((data: MarginResponse) => {
+          setFinalResult(data);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("FINAL ERROR:", err);
+          setLoading(false);
+        });
+    });
+
+    socket.onerror = () => {
+      console.error("SSE ERROR");
+      socket.close();
+      setLoading(false);
+    };
   };
-
-  es.addEventListener("platform", (event) => {
-    const parsed = JSON.parse(event.data);
-    console.log("📨 PLATFORM DATA:", parsed);
-
-    setPlatformResults((prev) => ({
-      ...prev,
-      [parsed.platform]: parsed.data,
-    }));
-  });
-
-  es.addEventListener("done", () => {
-    console.log("🏁 SSE DONE");
-    es.close();
-    setLoading(false);
-  });
-};
 
   return (
     <>
@@ -61,20 +79,27 @@ const Home: React.FC = () => {
         lang={lang}
       />
 
-      {loading && <Loader label="데이터 수신 중..." />}
+      {loading && <Loader label="Loading..." />}
 
-      {/* 플랫폼 가격 카드 */}
       {Object.keys(platformResults).length > 0 && (
-        <PlatformCards results={platformResults} />
+        <>
+          <SummaryHeader platformResults={platformResults} />
+          <PlatformCards platformResults={platformResults} />
+        </>
       )}
 
-      {/* 가격 도착 후 요약 */}
-      {done && (
-        <SummaryHeader
-          platformResults={platformResults}
-          keyword={keyword}
-          lang={lang}
-        />
+      {finalResult && (
+        <div style={{ marginTop: "30px" }}>
+          <h2>🔍 최종 AI 분석 결과</h2>
+
+          <div className="analysis-box">
+            <h3>📌 Basic 분석</h3>
+            <pre>{lang === "jp" ? finalResult.basicAi.textJp : finalResult.basicAi.textKo}</pre>
+
+            <h3>🌟 Premium 분석</h3>
+            <pre>{lang === "jp" ? finalResult.premiumAi.textJp : finalResult.premiumAi.textKo}</pre>
+          </div>
+        </div>
       )}
     </>
   );

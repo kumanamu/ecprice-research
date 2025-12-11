@@ -43,29 +43,38 @@ public class CoupangService {
     // =====================================================================
     public PriceInfo search(String keyword) {
         try {
-
             List<String> variants = buildVariants(keyword);
 
             for (String k : variants) {
 
-                log.info("🔍 [Coupang] 검색 후보: {}", k);
-
                 String encoded = URLEncoder.encode(k, StandardCharsets.UTF_8);
-                String uri = PATH + "?keyword=" + encoded;
+                String query = "keyword=" + encoded;
+                String uri = PATH + "?" + query;
+                String url = DOMAIN + uri;
+
+                // =========================================================
+                // 🔥 형이 요구한 동일 로그 포맷
+                // =========================================================
+                log.info("🔎 COUPANG | final keyword = {}", k);
+                log.info("🔎 COUPANG | request URL = {}", url);
 
                 String authorization = CoupangSignatureUtil.generate(
-                        "GET", uri, secretKey, accessKey
+                        "GET",
+                        uri,
+                        secretKey,
+                        accessKey
                 );
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("Authorization", authorization);
 
                 ResponseEntity<String> res = restTemplate.exchange(
-                        URI.create(DOMAIN + uri),
+                        URI.create(url),
                         HttpMethod.GET,
                         new HttpEntity<>(headers),
                         String.class
                 );
+                log.info("🔴 COUPANG RAW JSON = {}", res.getBody());
 
                 return parse(res.getBody());
             }
@@ -80,15 +89,62 @@ public class CoupangService {
 
 
     // =====================================================================
-    // 후보 생성
+    // 🔧 가격 파싱 안전 강화 — 그대로 유지
+    // =====================================================================
+    private PriceInfo parse(String body) {
+        try {
+            JsonNode root = objectMapper.readTree(body);
+
+            if (!"0".equals(root.path("rCode").asText("")))
+                return error("API_ERROR");
+
+            JsonNode data = root.path("data").path("productData");
+            if (!data.isArray() || data.isEmpty())
+                return error("NO_DATA");
+
+            JsonNode item = data.get(0);
+
+            long price = 0;
+
+            if (item.has("productPrice") && item.get("productPrice").asLong() > 0) {
+                price = item.get("productPrice").asLong();
+            } else if (item.has("price") && item.get("price").asLong() > 0) {
+                price = item.get("price").asLong();
+            } else if (item.has("salePrice") && item.get("salePrice").asLong() > 0) {
+                price = item.get("salePrice").asLong();
+            } else if (item.has("originalPrice") && item.get("originalPrice").asLong() > 0) {
+                price = item.get("originalPrice").asLong();
+            }
+
+            if (price == 0) {
+                log.warn("⚠️ Coupang 가격 필드 없음 (productPrice/price/salePrice/originalPrice 모두 NULL)");
+            }
+
+            return PriceInfo.builder()
+                    .platform("COUPANG")
+                    .productName(item.path("productName").asText(""))
+                    .productUrl(item.path("productUrl").asText(""))
+                    .productImage(item.path("productImage").asText(""))
+                    .priceOriginal((int) price)
+                    .shippingOriginal(0)
+                    .currencyOriginal("KRW")
+                    .status("SUCCESS")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("❌ Coupang Parse Error", e);
+            return error("PARSE_ERR");
+        }
+    }
+
+
+    // =====================================================================
+    // 🔧 검색어 후보 생성 (언어 규칙 그대로)
     // =====================================================================
     private List<String> buildVariants(String keyword) {
 
         List<String> cached = KeywordVariantCache.get("CUP_" + keyword);
-        if (cached != null) {
-            log.info("🔁 [Coupang 후보 캐시 HIT] {}", cached);
-            return cached;
-        }
+        if (cached != null) return cached;
 
         List<String> list = new ArrayList<>();
 
@@ -103,40 +159,7 @@ public class CoupangService {
         List<String> result = KeywordVariantCache.filter(list);
         KeywordVariantCache.put("CUP_" + keyword, result);
 
-        log.info("🔍 [Coupang 최종 후보] {}", result);
         return result;
-    }
-
-
-    private PriceInfo parse(String body) {
-        try {
-            JsonNode root = objectMapper.readTree(body);
-
-            if (!"0".equals(root.path("rCode").asText("")))
-                return error("API_ERROR");
-
-            JsonNode data = root.path("data").path("productData");
-            if (!data.isArray() || data.isEmpty())
-                return error("NO_DATA");
-
-            JsonNode item = data.get(0);
-
-            long price = item.path("productPrice").asLong(0);
-
-            return PriceInfo.builder()
-                    .platform("COUPANG")
-                    .productName(item.path("productName").asText(""))
-                    .productUrl(item.path("productUrl").asText(""))
-                    .productImage(item.path("productImage").asText(""))
-                    .priceOriginal((int) price)
-                    .shippingOriginal(0)
-                    .currencyOriginal("KRW")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("❌ Coupang Parse Error", e);
-            return error("PARSE_ERR");
-        }
     }
 
 
@@ -149,6 +172,7 @@ public class CoupangService {
                 .priceOriginal(0)
                 .shippingOriginal(0)
                 .currencyOriginal("KRW")
+                .status("NOT_FOUND")
                 .build();
     }
 }
