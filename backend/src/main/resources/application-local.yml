@@ -52,6 +52,10 @@ exchange:
     list: "https://api.exchangerate.host/list"
     historical: "https://api.exchangerate.host/historical"
 
+# ========== security ==========
+ecprice:
+  access-key: ${EC_ACCESS_KEY}
+
 # ========== GOOGLE OAUTH2 ==========
 google:
   oauth:

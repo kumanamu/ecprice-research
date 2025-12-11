@@ -39,7 +39,9 @@ dependencies {
 	implementation 'commons-codec:commons-codec:1.15'
 	implementation 'org.jsoup:jsoup:1.17.2'
 
-	
-	}
+	/* Bucket4j (Rate Limiting) */
+	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
+
+}
 
 
