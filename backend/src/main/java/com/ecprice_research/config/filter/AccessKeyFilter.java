@@ -31,6 +31,11 @@ public class AccessKeyFilter extends OncePerRequestFilter {
 
         String clientKey = request.getHeader("X-EC-ACCESS");
 
+// 🔽 SSE 대응: query param fallback
+        if (clientKey == null) {
+            clientKey = request.getParameter("key");
+        }
+
         System.out.println("🔥 RECEIVED KEY = " + clientKey);
         System.out.println("🔥 SERVER KEY   = " + serverKey);
 
