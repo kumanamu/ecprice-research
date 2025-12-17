@@ -1,72 +1,66 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/ecprice?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/ecprice?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
     password: 1111
 
   jpa:
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate.format_sql: true
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # ✅ dialect 설정은 지워도 됨(경고 떴던거 기억나지)
 
-# ===================== AI ======================
+# ===== 외부 키들은 로컬에서도 환경변수로만 받게 통일 =====
 openai:
   api:
-    key: "${OPENAI_API_KEY}"
-    model: "${OPENAI_API_MODEL}"
+    key: ${OPENAI_API_KEY:}
+    model: ${OPENAI_API_MODEL:gpt-4o-mini}
 
-# ===================== 네이버 ====================
 naver:
   client:
-    id: "${NAVER_CLIENT_ID}"
-    secret: "${NAVER_CLIENT_SECRET}"
+    id: ${NAVER_CLIENT_ID:}
+    secret: ${NAVER_CLIENT_SECRET:}
 
-# ===================== 쿠팡 ======================
 coupang:
-  accessKey: "${COUPANG_ACCESS_KEY}"
-  secretKey: "${COUPANG_SECRET_KEY}"
+  accessKey: ${COUPANG_ACCESS_KEY:}
+  secretKey: ${COUPANG_SECRET_KEY:}
 
-# ===================== 라쿠텐 ====================
 rakuten:
   api:
-    key: "${RAKUTEN_API_KEY}"
-    secret: "${RAKUTEN_API_SECRET}"
-    affiliate: "${RAKUTEN_AFFILIATE_ID}"
+    key: ${RAKUTEN_API_KEY:}
+    secret: ${RAKUTEN_AFFILIATE_ID:}
+    affiliate: ${RAKUTEN_AFFILIATE_ID:}
     apiUrl: "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
 
-# ===================== 아마존 ====================
 scraperapi:
   api:
-    key: ${SCRAPER_API_KEY}
+    key: ${SCRAPER_API_KEY:}
 
-# ===================== 환율 ====================
 exchange:
   api:
-    key: "${EXCHANGE_API_KEY}"
+    key: ${EXCHANGE_API_KEY:}
   url:
     live: "https://api.exchangerate.host/live"
     convert: "https://api.exchangerate.host/convert"
     list: "https://api.exchangerate.host/list"
     historical: "https://api.exchangerate.host/historical"
 
-# ========== security ==========
-ecprice:
-  access-key: ${EC_ACCESS_KEY}
+jwt:
+  secret: ${JWT_SECRET:dev-secret}
+  expiration: ${JWT_EXPIRATION:3600000}
+  issuer: ecprice-research
 
-# ========== GOOGLE OAUTH2 ==========
 google:
   oauth:
-    clientId: "${GOOGLE_OAUTH_CLIENT_ID}"
-    clientSecret: "${GOOGLE_OAUTH_CLIENT_SECRET}"
+    clientId: ${GOOGLE_OAUTH_CLIENT_ID:}
+    clientSecret: ${GOOGLE_OAUTH_CLIENT_SECRET:}
     redirectUri: "http://localhost:8080/login/oauth2/code/google"
     scope:
       - profile
       - email
-
-logging:
-  level:
-    com.ecprice_research.domain.coupang.util: DEBUG
-    com.ecprice_research.domain.coupang.service: DEBUG
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:5175
