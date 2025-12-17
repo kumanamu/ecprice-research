@@ -1,17 +1,32 @@
-// src/App.tsx
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import MainLayout from "./components/layout/MainLayout";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Home from "./pages/Home";
-import Report from "./pages/Report";
+import RequireAuth from "./auth/RequireAuth";
+import AppHeader from "./components/layout/AppHeader";
 
 export default function App() {
   return (
-    <MainLayout>
+    <>
+      {/* ✅ 전역 헤더 (번역 토글 위치) */}
+      <AppHeader />
+
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/report" element={<Report />} />
+        {/* 기본 진입 */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* 공개 */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* 보호 */}
+        <Route element={<RequireAuth />}>
+          <Route path="/home" element={<Home />} />
+        </Route>
+
+        {/* 나머지 */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    </MainLayout>
+    </>
   );
 }

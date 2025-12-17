@@ -1,4 +1,3 @@
-// src/components/report/KeyMetricsSection.tsx
 import React from "react";
 import { t } from "../../utils/t";
 
@@ -9,7 +8,18 @@ interface Props {
   lang: "ko" | "jp";
 }
 
-export default function KeyMetricsSection({ platform, profitKrw, profitJpy, lang }: Props) {
+export default function KeyMetricsSection({
+  platform,
+  profitKrw,
+  profitJpy,
+  lang,
+}: Props) {
+  const safeProfitKrw =
+    typeof profitKrw === "number" && !isNaN(profitKrw) ? profitKrw : 0;
+
+  const safeProfitJpy =
+    typeof profitJpy === "number" && !isNaN(profitJpy) ? profitJpy : 0;
+
   return (
     <div className="p-5 rounded-xl shadow bg-white">
       <div className="font-bold text-lg mb-3">
@@ -18,15 +28,17 @@ export default function KeyMetricsSection({ platform, profitKrw, profitJpy, lang
 
       <ul className="list-disc ml-5 text-gray-700">
         <li>
-          {t("bestPlatform", lang)}: <b>{platform}</b>
+          {t("bestPlatform", lang)}: <b>{platform || "-"}</b>
         </li>
 
         <li>
-          {t("expectedProfitKrw", lang)}: {profitKrw.toLocaleString()}
+          {t("expectedProfitKrw", lang)}:{" "}
+          {safeProfitKrw.toLocaleString()}
         </li>
 
         <li>
-          {t("expectedProfitJpy", lang)}: {profitJpy.toLocaleString()}
+          {t("expectedProfitJpy", lang)}:{" "}
+          {safeProfitJpy.toLocaleString()}
         </li>
       </ul>
     </div>

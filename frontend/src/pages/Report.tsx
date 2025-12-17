@@ -1,32 +1,26 @@
-import React, { useEffect, useState } from "react";
-import ReportPanel from "../components/layout/ReportPanel";
-import Loader from "../components/common/Loader";
+import React, { useState } from "react";
+import ReportList from "../components/report/ReportList";
+import ReportDetail from "../components/report/ReportDetail";
 
-const Report: React.FC = () => {
-  const [basicAi, setBasicAi] = useState<string | null>(null);
-  const [premiumAi, setPremiumAi] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function Report() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("http://localhost:8080/api/margin/ai")
-      .then((r) => r.json())
-      .then((data) => {
-        setBasicAi(data.basicAi);
-        setPremiumAi(data.premiumAi);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  // 🔥 MOCK DATA (나중에 API 대체)
+  const reports = [
+    { id: "1", keyword: "무선 이어폰", createdAt: "2025-01-16" },
+    { id: "2", keyword: "로봇 청소기", createdAt: "2025-01-15" },
+    { id: "3", keyword: "캠핑 의자", createdAt: "2025-01-14" },
+  ];
+
+  const selected = reports.find((r) => r.id === selectedId);
 
   return (
-    <>
-      {loading ? (
-        <Loader label="AI 분석 준비 중..." />
-      ) : (
-        <ReportPanel basicAi={basicAi} premiumAi={premiumAi} />
-      )}
-    </>
-  );
-};
+    <main className="max-w-7xl mx-auto px-4 py-10">
+      <h1 className="text-2xl font-black mb-6">📁 저장된 리포트</h1>
 
-export default Report;
+      <ReportList reports={reports} onSelect={setSelectedId} />
+
+      {selected && <ReportDetail keyword={selected.keyword} />}
+    </main>
+  );
+}

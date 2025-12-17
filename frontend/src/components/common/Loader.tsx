@@ -1,12 +1,19 @@
-// src/components/common/Loader.tsx
 import React from "react";
+import { useLang } from "../../context/LangContext";
 
-const Loader: React.FC<{ message: string }> = ({ message }) => {
+interface Props {
+  label?: string;
+}
+
+export default function Loader({ label }: Props) {
+  const { lang } = useLang();
+
   return (
-    <div className="p-4 bg-gray-100 rounded shadow text-center text-gray-600 animate-pulse">
-      {message}
+    <div className="flex items-center justify-center py-10 text-slate-500">
+      {label ??
+        (lang === "ko"
+          ? "데이터를 불러오는 중입니다..."
+          : "データを読み込んでいます...")}
     </div>
   );
-};
-
-export default Loader;
+}

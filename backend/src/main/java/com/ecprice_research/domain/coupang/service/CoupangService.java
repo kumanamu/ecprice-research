@@ -58,13 +58,29 @@ public class CoupangService {
                 log.info("🔎 COUPANG | final keyword = {}", k);
                 log.info("🔎 COUPANG | request URL = {}", url);
 
+// ===== SIGN DEBUG (generate 호출 전) =====
+                log.error("===== COUPANG SIGN DEBUG =====");
+                log.error("Method = {}", "GET");
+                log.error("URI = {}", uri);
+                log.error("AccessKey = {}", accessKey);
+                log.error("SecretKey = {}", (secretKey != null && !secretKey.isBlank()) ? "SET" : "NULL");
+
+
                 String authorization = CoupangSignatureUtil.generate(
+
                         "GET",
                         uri,
                         secretKey,
                         accessKey
-                );
 
+
+                );
+                log.error(
+                        "Authorization(PREFIX) = {}",
+                        authorization != null
+                                ? authorization.substring(0, Math.min(60, authorization.length()))
+                                : "NULL"
+                );
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("Authorization", authorization);
 
@@ -75,6 +91,8 @@ public class CoupangService {
                         String.class
                 );
                 log.info("🔴 COUPANG RAW JSON = {}", res.getBody());
+                log.error("===== COUPANG RESPONSE STATUS =====");
+                log.error("HTTP STATUS = {}", res.getStatusCode());
 
                 return parse(res.getBody());
             }

@@ -38,6 +38,14 @@ public class NaverService {
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("X-Naver-Client-Id", config.getId());
                 headers.set("X-Naver-Client-Secret", config.getSecret());
+                log.error("===== NAVER AUTH DEBUG =====");
+                log.error("ClientId = {}", config.getId());
+                log.error("ClientSecret = {}", config.getSecret() != null ? "SET" : "NULL");
+                log.error("URL = {}", url);
+                log.error("Headers = X-Naver-Client-Id:{}, X-Naver-Client-Secret:{}",
+                        config.getId(),
+                        config.getSecret() != null ? "SET" : "NULL"
+                );
 
                 ResponseEntity<Map> response = restTemplate.exchange(
                         url,

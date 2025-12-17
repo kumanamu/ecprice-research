@@ -1,16 +1,26 @@
 // src/components/layout/MainLayout.tsx
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../common/Sidebar";
-import Header from "../common/Header";
+import Header from "./Header";
+import { useLang } from "../../context/LangContext";
+import { Outlet } from "react-router-dom";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+
+export default function MainLayout() {
+  const { lang } = useLang();
+
+  // 🔹 전역 AI 모드 (Basic / Premium)
+  const [aiMode, setAiMode] = useState<"basic" | "premium">("basic");
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
+
+      <div className="flex flex-1 flex-col">
+        <Header aiMode={aiMode} onChangeAiMode={setAiMode} lang={lang} />
+
         <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
-          {children}
+          <Outlet context={{ aiMode }} />
         </main>
       </div>
     </div>

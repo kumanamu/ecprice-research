@@ -6,31 +6,38 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "users")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "users")   // user 예약어 충돌 방지
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 구글 OAuth2 고유 ID (sub)
-    @Column(nullable = false, unique = true)
+    // OAuth 사용자만 값 있음
+    @Column(unique = true)
     private String oauthId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
+    // 일반 로그인용 (OAuth 사용자는 null)
+    private String password;
+
+    // "local", "google"
     @Column(nullable = false)
-    private String provider;    // "google"
+    private String provider;
 
     private String name;
-    private String profileImage;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

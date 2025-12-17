@@ -1,126 +1,150 @@
-import React, { useState, useRef } from "react";
-import SearchBar from "../components/search/SearchBar";
+// src/pages/Home.tsx
+import React, { useRef, useState } from "react";
+import HomeHeroRaw from "../components/home/HomeHeroRaw";
+import PlatformResultGrid from "../components/report/PlatformResultGrid";
+import PlatformDetailPanel from "../components/report/PlatformDetailPanel";
 import SummaryHeader from "../components/report/SummaryHeader";
-import PlatformCards from "../components/report/PlatformCards";
+import AiAnalysisPanel from "../components/report/AiAnalysisPanel";
 import Loader from "../components/common/Loader";
+import ReportSaveBar from "../components/report/ReportSaveBar";
+import ReportHistoryPreview from "../components/report/ReportHistoryPreview";
 import { useLang } from "../context/LangContext";
 import type { MarginResponse, PriceInfo } from "../types/marginTypes";
 
-const Home: React.FC = () => {
+export default function Home() {
   const { lang } = useLang();
-
   const [keyword, setKeyword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const [platformResults, setPlatformResults] = useState<Record<string, PriceInfo>>({});
+  const [platformResults, setPlatformResults] = useState<
+    Record<string, PriceInfo>
+  >({});
   const [finalResult, setFinalResult] = useState<MarginResponse | null>(null);
 
+  const [loadingPrices, setLoadingPrices] = useState(false);
+  const [loadingAi, setLoadingAi] = useState(false);
+
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedData, setSelectedData] = useState<PriceInfo | null>(null);
+
   const platformRef = useRef<Record<string, PriceInfo>>({});
-  const requestIdRef = useRef<string | null>(null); // ✅ [보안] 요청 식별자
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const onSearch = () => {
     if (!keyword.trim()) return;
 
-    const requestId = crypto.randomUUID(); // ✅ [보안] 요청 ID 생성
-    requestIdRef.current = requestId;
-
-    setLoading(true);
     setPlatformResults({});
-    platformRef.current = {};
     setFinalResult(null);
+    platformRef.current = {};
 
-const API_KEY = import.meta.env.VITE_ECPRICE_ACCESS_KEY;
+    setLoadingPrices(true);
+    setLoadingAi(false);
 
-const socket = new EventSource(
-  `/api/margin/stream?keyword=${encodeURIComponent(keyword)}&lang=${lang}&key=${API_KEY}`
-);
-console.log("API KEY =", import.meta.env.VITE_ECPRICE_API_KEY);
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
 
-    socket.addEventListener("platform", (event: MessageEvent) => {
-      const parsed = JSON.parse(event.data);
-      const platform = parsed.platform;
+    const es = new EventSource(
+      `/api/margin/stream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
+    );
+    eventSourceRef.current = es;
+
+    // ✅ SSE platform 이벤트 — 백 계약 그대로
+    es.addEventListener("platform", (e) => {
+      const parsed = JSON.parse((e as MessageEvent).data);
+
+      const platform: string = parsed.platform;
       const data: PriceInfo = parsed.data;
-console.log("ALL ENV =", import.meta.env);
 
       platformRef.current[platform] = data;
       setPlatformResults({ ...platformRef.current });
     });
 
-    socket.addEventListener("done", () => {
-      socket.close();
+    es.addEventListener("done", () => {
+      es.close();
+      eventSourceRef.current = null;
 
-      const postBody = platformRef.current;
+      setLoadingPrices(false);
+      setLoadingAi(true);
 
       fetch(
-  `/api/margin/finalCompare?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-EC-ACCESS": import.meta.env.VITE_ECPRICE_ACCESS_KEY, // ← 이 줄 추가
-    },
-    body: JSON.stringify(postBody),
-  }
-)
+        `/api/margin/finalCompare?keyword=${encodeURIComponent(
+          keyword
+        )}&lang=${lang}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(platformRef.current),
+        }
+      )
         .then((res) => res.json())
         .then((data: MarginResponse) => {
           setFinalResult(data);
-          setLoading(false);
         })
-        .catch((err) => {
-          console.error("FINAL ERROR:", err);
-          setLoading(false);
-        });
+        .finally(() => setLoadingAi(false));
     });
 
-    socket.onerror = () => {
-      console.error("SSE ERROR");
-      socket.close();
-      setLoading(false);
+    es.onerror = () => {
+      es.close();
+      eventSourceRef.current = null;
+      setLoadingPrices(false);
+      setLoadingAi(false);
     };
   };
 
   return (
     <>
-      <SearchBar
+      <HomeHeroRaw
         keyword={keyword}
         onKeywordChange={setKeyword}
         onSearch={onSearch}
-        lang={lang}
       />
 
-      {loading && <Loader label="Loading..." />}
-
-      {Object.keys(platformResults).length > 0 && (
-        <>
-          <SummaryHeader platformResults={platformResults} />
-          <PlatformCards platformResults={platformResults} />
-        </>
+      {loadingPrices && (
+        <Loader
+          label={
+            lang === "ko"
+              ? "플랫폼별 가격 수집 중..."
+              : "プラットフォーム価格取得中..."
+          }
+        />
       )}
 
-      {finalResult && (
-        <div style={{ marginTop: "30px" }}>
-          <h2>🔍 최종 AI 분석 결과</h2>
+      <div className="max-w-7xl mx-auto px-4 mt-10">
+        {Object.keys(platformResults).length > 0 && (
+          <PlatformResultGrid
+            platformResults={platformResults}
+            onSelect={(platform, data) => {
+              setSelectedPlatform(platform);
+              setSelectedData(data);
+            }}
+          />
+        )}
 
-          <div className="analysis-box">
-            <h3>📌 Basic 분석</h3>
-            <pre>
-              {lang === "jp"
-                ? finalResult.basicAi.textJp
-                : finalResult.basicAi.textKo}
-            </pre>
+        {loadingAi && (
+          <Loader label={lang === "ko" ? "AI 분석 중..." : "AI分析中..."} />
+        )}
 
-            <h3>🌟 Premium 분석</h3>
-            <pre>
-              {lang === "jp"
-                ? finalResult.premiumAi.textJp
-                : finalResult.premiumAi.textKo}
-            </pre>
-          </div>
-        </div>
+        {finalResult && (
+          <>
+            <SummaryHeader result={finalResult} />
+            <ReportSaveBar onSave={() => {}} />
+            <AiAnalysisPanel result={finalResult} />
+          </>
+        )}
+      </div>
+
+      <ReportHistoryPreview items={[]} />
+
+      {selectedPlatform && selectedData && (
+        <PlatformDetailPanel
+          platform={selectedPlatform}
+          data={selectedData}
+          onClose={() => {
+            setSelectedPlatform(null);
+            setSelectedData(null);
+          }}
+        />
       )}
     </>
   );
-};
-
-export default Home;
+}
