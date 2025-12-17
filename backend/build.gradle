@@ -18,69 +18,65 @@ repositories {
 dependencies {
 
 	/* ===============================
-       🌐 Spring Web / API
-       =============================== */
+	   🌐 Spring Web / API
+	   =============================== */
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	/* SSE, WebClient (비동기 스트림용) */
+	/* SSE / WebClient */
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	/* ===============================
-       🗄️ JPA / Database
-       =============================== */
+	   🗄️ JPA / Database
+	   =============================== */
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	/* ✅ MySQL Connector (정답) */
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
 	/* ===============================
-       🔐 Security / Auth
-       =============================== */
+	   🔐 Security / Auth
+	   =============================== */
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
-	/* Validation (@Valid, @Email, @NotBlank 등) */
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	/* ===============================
-       🔑 JWT (io.jsonwebtoken)
-       =============================== */
+	   🔑 JWT
+	   =============================== */
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 	/* ===============================
-       🔄 Redis (캐싱 / 세션 / 확장 대비)
-       =============================== */
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-	/* ===============================
-       🤖 External API / HTTP
-       =============================== */
-	/* OpenAI / 외부 API 호출 */
+	   🤖 External API / HTTP
+	   =============================== */
 	implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-
-	/* HTML 파싱 (Amazon 등 크롤링) */
 	implementation 'org.jsoup:jsoup:1.17.2'
 
 	/* ===============================
-       📦 JSON / Encoding
-       =============================== */
+	   📦 JSON / Encoding
+	   =============================== */
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'org.json:json:20240303'
 	implementation 'commons-codec:commons-codec:1.15'
 
 	/* ===============================
-       🚦 Rate Limiting
-       =============================== */
+	   🚦 Rate Limiting
+	   =============================== */
 	implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
 
 	/* ===============================
-       🛠️ Lombok
-       =============================== */
+	   🛠️ Lombok
+	   =============================== */
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	/* ===============================
-       🧪 Test
-       =============================== */
+	   🧪 Test
+	   =============================== */
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
 }

@@ -1,18 +1,30 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${RDS_ENDPOINT}:3306/ecprice?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://${RDS_ENDPOINT}:3306/ecprice
+      ?useSSL=false
+      &allowPublicKeyRetrieval=true
+      &serverTimezone=Asia/Seoul
+      &characterEncoding=UTF-8
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
   jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect   # ⭐ 핵심
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+        show_sql: false
+        jdbc:
+          time_zone: Asia/Seoul
 
-# 운영에서도 키는 env
+  sql:
+    init:
+      mode: never   # ⭐ RDS에서 init 스킵 (중요)
+
+# ===== External APIs =====
 openai:
   api:
     key: ${OPENAI_API_KEY}
@@ -60,5 +72,6 @@ google:
     scope:
       - profile
       - email
+
 cors:
   allowed-origins: https://jpkaresearch.store

@@ -1,8 +1,9 @@
 spring:
   application:
     name: ecprice-research
-    profiles:
-      active: aws
+
+  profiles:
+    active: aws   # ✅ 반드시 여기
 
 server:
   port: 8080
