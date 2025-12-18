@@ -1,5 +1,4 @@
 // src/components/report/AIRecommendationCard.tsx
-import React from "react";
 import { t } from "../../utils/t";
 
 interface Props {

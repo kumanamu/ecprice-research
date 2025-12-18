@@ -10,7 +10,7 @@ spring:
     password: ${DB_PASSWORD}
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect   # ⭐ 핵심
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
     properties:
@@ -22,7 +22,7 @@ spring:
 
   sql:
     init:
-      mode: never   # ⭐ RDS에서 init 스킵 (중요)
+      mode: never
 
 # ===== External APIs =====
 openai:
@@ -74,4 +74,8 @@ google:
       - email
 
 cors:
-  allowed-origins: https://jpkaresearch.store
+  allowed-origins: http://localhost:5174,https://jpkaresearch.store  # 🔥 수정
+
+app:
+  frontend:
+    redirect-url: ${APP_FRONT_REDIRECT_URL}

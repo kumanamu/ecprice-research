@@ -1,5 +1,4 @@
 // src/components/report/PriceTable.tsx
-import React from "react";
 import { t } from "../../utils/t";
 import type { PriceInfo } from "../../types/marginTypes";
 

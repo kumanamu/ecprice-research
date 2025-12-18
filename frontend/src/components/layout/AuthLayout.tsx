@@ -1,12 +1,9 @@
-import Header from "./Header";
+import { Outlet } from "react-router-dom";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout() {
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        {children}
-      </main>
-    </>
+    <main className="min-h-screen bg-gray-50">
+      <Outlet />
+    </main>
   );
 }

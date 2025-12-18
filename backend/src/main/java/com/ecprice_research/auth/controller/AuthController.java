@@ -20,14 +20,15 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<Void> signup(@RequestBody @Valid SignupRequest req) {
-        authService.signup(req);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<AuthResponse> signup(@RequestBody @Valid SignupRequest req) {
+        System.out.println("🔥 SIGNUP CONTROLLER HIT");
+        String token = authService.signup(req);  // 🔥 토큰 받기
+        return ResponseEntity.ok(new AuthResponse(token, "ROLE_USER"));  // 🔥 토큰 반환
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest req) {
         String token = authService.login(req);
-        return ResponseEntity.ok(new AuthResponse(token));
+        return ResponseEntity.ok(new AuthResponse(token, "ROLE_USER"));
     }
 }

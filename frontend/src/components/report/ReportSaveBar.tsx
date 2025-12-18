@@ -1,6 +1,4 @@
-import React from "react";
 import { useLang } from "../../context/LangContext";
-import { t } from "../../utils/t";
 
 interface Props {
   onSave: () => void;

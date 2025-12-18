@@ -1,17 +1,16 @@
 // src/components/drawers/PremiumAnalysisDrawer.tsx
-import React from "react";
 import type { MarginResponse } from "../../types/marginTypes";
 
 import KeyMetricsSection from "../report/KeyMetricsSection";
 import ChartsSection from "../report/ChartsSection";
-import PlatformDetailTable from "../report/PlatformDetailPanel";
+import PlatformDetailTableMock from "../report/PlatformDetailTableMock";
 
 interface Props {
   result: MarginResponse;
   lang: "ko" | "jp";
 }
 
-const PremiumAnalysisDrawer: React.FC<Props> = ({ result, lang }) => {
+export default function PremiumAnalysisDrawer({ result, lang }: Props) {
   const text =
     lang === "jp"
       ? result.premiumAi.textJp
@@ -25,14 +24,22 @@ const PremiumAnalysisDrawer: React.FC<Props> = ({ result, lang }) => {
         <h3 className="text-lg font-semibold">Premium 분석</h3>
       </div>
 
-      {/* KPI 요약 (mock 모드) */}
-      <KeyMetricsSection />
+      {/* KPI 요약 */}
+      <KeyMetricsSection
+        platform={result.bestPlatform}
+        profitKrw={result.profitKrw}
+        profitJpy={result.profitJpy}
+        lang={lang}
+      />
 
-      {/* 차트 영역 (mock 모드) */}
-      <ChartsSection />
+      {/* 차트 영역 */}
+      <ChartsSection
+        prices={result.platformPrices}
+        lang={lang}
+      />
 
-      {/* 테이블 영역 (mock 모드) */}
-      <PlatformDetailTable />
+      {/* 테이블 영역 (mock 유지) */}
+      <PlatformDetailTableMock />
 
       {/* AI 텍스트 */}
       <div className="rounded-xl bg-white border p-4">
@@ -43,6 +50,4 @@ const PremiumAnalysisDrawer: React.FC<Props> = ({ result, lang }) => {
       </div>
     </section>
   );
-};
-
-export default PremiumAnalysisDrawer;
+}

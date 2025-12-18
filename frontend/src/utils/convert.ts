@@ -10,12 +10,14 @@ export function formatJpy(value: number | null | undefined): string {
   return "¥" + value.toLocaleString("ja-JP");
 }
 
-export function safeNumber(value: any): number {
-  if (value == null || isNaN(value)) return 0;
-  return Number(value);
+export function safeNumber(value: unknown): number {
+  if (value == null) return 0;
+
+  const num = Number(value);
+  return Number.isNaN(num) ? 0 : num;
 }
 
-export function safeText(value: any): string {
+export function safeText(value: unknown): string {
   if (value == null || value === "") return "-";
   return String(value);
 }

@@ -1,4 +1,3 @@
-import React from "react";
 import type { MarginResponse } from "../../types/marginTypes";
 import AiAnalysisPanel from "./AiAnalysisPanel";
 

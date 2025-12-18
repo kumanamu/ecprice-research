@@ -9,7 +9,6 @@ export default function SearchBar({
   keyword = "",
   onKeywordChange = () => {},
   onSearch = () => {},
-  lang = "ko",
 }: Props) {
   return (
     <div>

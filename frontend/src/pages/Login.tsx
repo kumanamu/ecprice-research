@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { AxiosError } from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -20,12 +21,17 @@ export default function Login() {
     try {
       await login(email, password);
       navigate("/home", { replace: true });
-    } catch (err: any) {
-      const status = err.response?.status;
-      if (status === 401) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        const status = err.response?.status;
+
+        if (status === 401) {
+          setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+        } else {
+          setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
       } else {
-        setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        setError("알 수 없는 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
@@ -34,10 +40,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex justify-center bg-white px-4">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-sm pt-16 space-y-6"
-      >
+      <form onSubmit={onSubmit} className="w-full max-w-sm pt-16 space-y-6">
         <h1 className="text-center text-xl font-bold">로그인</h1>
 
         <div>
@@ -46,7 +49,7 @@ export default function Login() {
             className="w-full rounded-lg border px-4 py-3 bg-blue-50"
             placeholder="이메일을 입력해주세요."
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
@@ -59,12 +62,12 @@ export default function Login() {
               className="w-full rounded-lg border px-4 py-3 bg-blue-50 pr-10"
               placeholder="비밀번호를 입력해주세요."
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
             <button
               type="button"
-              onClick={() => setShowPw(v => !v)}
+              onClick={() => setShowPw((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
             >
               👁

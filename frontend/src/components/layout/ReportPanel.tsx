@@ -1,8 +1,17 @@
 // src/components/layout/ReportPanel.tsx
-import React from "react";
 import { useLang } from "../../context/LangContext";
 
-export default function ReportPanel({ basicAi, premiumAi, activeTab }) {
+interface Props {
+  basicAi: string;
+  premiumAi: string;
+  activeTab: "basic" | "premium";
+}
+
+export default function ReportPanel({
+  basicAi,
+  premiumAi,
+  activeTab,
+}: Props) {
   const { lang } = useLang();
 
   return (

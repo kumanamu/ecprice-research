@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.ecprice_research.auth.exception.AuthException;
 
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -20,7 +19,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public void signup(SignupRequest req) {
+    public String signup(SignupRequest req) {  // 🔥 void → String
 
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -34,8 +33,10 @@ public class AuthService {
                 .role(Role.ROLE_USER)
                 .build();
 
-
         userRepository.save(user);
+
+        // 🔥 토큰 생성해서 반환
+        return jwtProvider.createToken(user.getId(), user.getEmail());
     }
 
     public String login(LoginRequest req) {
@@ -49,5 +50,4 @@ public class AuthService {
 
         return jwtProvider.createToken(user.getId(), user.getEmail());
     }
-
 }

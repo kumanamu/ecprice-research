@@ -15,4 +15,4 @@ logging:
     root: INFO
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  allowed-origins: http://localhost:5174,https://jpkaresearch.store

@@ -9,6 +9,6 @@ export type AuthRes = {
 };
 
 export const authApi = {
-  login: (body: LoginReq) => publicApi.post<AuthRes>("/api/auth/login", body),
-  signup: (body: SignupReq) => publicApi.post("/api/auth/signup", body),
+  login: (body: LoginReq) => publicApi.post<AuthRes>("/auth/login", body),
+  signup: (body: SignupReq) => publicApi.post("/auth/signup", body),
 };

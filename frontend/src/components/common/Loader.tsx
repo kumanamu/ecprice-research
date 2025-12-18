@@ -1,4 +1,3 @@
-import React from "react";
 import { useLang } from "../../context/LangContext";
 
 interface Props {

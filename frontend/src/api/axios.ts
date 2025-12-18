@@ -1,31 +1,43 @@
+// src/api/axios.ts
 import axios from "axios";
 
-const BASE_URL = "VITE_API_BASE_URL";
-const TOKEN_KEY = "accessToken";
-
-export const tokenStore = {
-  get: () => localStorage.getItem(TOKEN_KEY),
-  set: (token: string) => localStorage.setItem(TOKEN_KEY, token),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
+// 환경에 따라 자동 처리
+const getBaseURL = () => {
+  // 배포 환경 (HTTPS)
+  if (window.location.protocol === 'https:') {
+    return '/api';  // Nginx가 처리
+  }
+  // 로컬 개발 환경
+  return 'http://localhost:8080/api';
 };
 
-// ✅ 인증 필요 없는 요청용 (회원가입/로그인)
-export const publicApi = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: false,
-});
-
-// ✅ 인증 필요한 요청용
 const api = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: false,
+  baseURL: getBaseURL(),
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// ✅ 요청마다 localStorage에서 토큰 읽어서 붙임 (context/memory 꼬임 방지)
-api.interceptors.request.use((config) => {
-  const token = tokenStore.get();
+export let memoryToken: string | null = null;
+
+export const setToken = (token: string | null) => {
+  memoryToken = token;
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
+
+const bootToken = localStorage.getItem('token');
+if (bootToken) {
+  setToken(bootToken);
+}
+
+api.interceptors.request.use(config => {
+  if (memoryToken) {
+    config.headers.Authorization = `Bearer ${memoryToken}`;
   }
   return config;
 });

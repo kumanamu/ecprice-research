@@ -1,6 +1,6 @@
-import React from "react";
+// src/components/home/HomeHeroRaw.tsx
 import { useLang } from "../../context/LangContext";
-import { t } from "../../utils/t";
+import SearchInput from "../common/SearchInput";
 
 interface Props {
   keyword: string;
@@ -16,14 +16,6 @@ export default function HomeHeroRaw({
   loading = false,
 }: Props) {
   const { lang } = useLang();
-
-  const canSearch = keyword.trim().length > 0 && !loading;
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && canSearch) {
-      onSearch();
-    }
-  };
 
   return (
     <section className="w-full flex flex-col items-center justify-center px-4 py-20">
@@ -52,33 +44,16 @@ export default function HomeHeroRaw({
           : "楽天・Naver・Amazon Japan・Coupangの価格とマージンを一目で比較。"}
       </p>
 
-      {/* Search Box */}
-      <div className="mt-10 w-full max-w-2xl bg-white rounded-2xl shadow-lg border p-3 flex gap-2">
-        <input
-          value={keyword}
-          onChange={(e) => onKeywordChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("searchPlaceholder", lang)}
-          className="flex-1 px-4 py-3 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary"
+      {/* 🔒 검색창은 무조건 고정 */}
+      <div className="mt-10 w-full max-w-2xl">
+        <SearchInput
+          label={lang === "ko" ? "검색어 입력" : "検索キーワード"}
+          keyword={keyword}
+          onKeywordChange={onKeywordChange}
+          onSearch={onSearch}
+          lang={lang}
+          loading={loading}
         />
-
-        <button
-          disabled={!canSearch}
-          onClick={onSearch}
-          className={`px-6 py-3 rounded-xl font-bold transition
-            ${
-              canSearch
-                ? "bg-primary text-white hover:bg-primary-dark"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
-            }
-          `}
-        >
-          {loading
-            ? lang === "ko"
-              ? "분석 중..."
-              : "分析中..."
-            : t("search", lang)}
-        </button>
       </div>
     </section>
   );
