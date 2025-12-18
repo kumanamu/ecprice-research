@@ -72,7 +72,10 @@ export default function Home() {
         )}&lang=${lang}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
           body: JSON.stringify(platformRef.current),
         }
       )

@@ -3,7 +3,6 @@ import type { MarginResponse } from "../../types/marginTypes";
 
 import KeyMetricsSection from "../report/KeyMetricsSection";
 import ChartsSection from "../report/ChartsSection";
-import PlatformDetailTableMock from "../report/PlatformDetailTableMock";
 
 interface Props {
   result: MarginResponse;
@@ -39,7 +38,7 @@ export default function PremiumAnalysisDrawer({ result, lang }: Props) {
       />
 
       {/* 테이블 영역 (mock 유지) */}
-      <PlatformDetailTableMock />
+      {/* <PlatformDetailTableMock /> */}
 
       {/* AI 텍스트 */}
       <div className="rounded-xl bg-white border p-4">
