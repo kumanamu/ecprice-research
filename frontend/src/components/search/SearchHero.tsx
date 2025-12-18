@@ -9,7 +9,7 @@ interface Props {
   lang: "ko" | "jp";
   loading?: boolean;
 }
-
+//수정완료//
 export default function SearchHero({
   keyword,
   onKeywordChange,

@@ -8,7 +8,7 @@ interface Props {
   onSearch: () => void;
   loading?: boolean;
 }
-
+//수정완료//
 export default function HomeHeroRaw({
   keyword,
   onKeywordChange,
@@ -36,6 +36,7 @@ export default function HomeHeroRaw({
             : "AIでもっと正確・高速に"}
         </span>
       </h1>
+
 
       {/* Description */}
       <p className="mt-4 text-center text-slate-600 max-w-xl">
