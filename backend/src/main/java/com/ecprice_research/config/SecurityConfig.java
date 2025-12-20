@@ -51,15 +51,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 🔥 인증 API 명시적으로 POST 허용
-                        .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-
-                        // 🔥 SSE
-                        .requestMatchers(HttpMethod.GET, "/margin/stream").permitAll()
-
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/margin/stream").permitAll()
                         .anyRequest().authenticated()
                 )
+
 
                 // 🔥 JWT 필터를 CORS 필터 다음에 추가
                 .addFilterAfter(
