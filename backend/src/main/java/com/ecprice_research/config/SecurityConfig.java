@@ -30,7 +30,10 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
-
+    @PostConstruct
+    public void checkLoaded() {
+        System.out.println("🔥🔥🔥 SECURITY CONFIG LOADED (API AUTH PERMIT ALL) 🔥🔥🔥");
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -49,7 +52,9 @@ public class SecurityConfig {
                 // 🔥 CORS를 제일 먼저
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> {
+                    System.out.println("🔥 APPLYING SECURITY RULES");
+                    auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 🔥 여기 핵심
