@@ -101,6 +101,13 @@ jobs:
             EOF
 
             echo "==============================="
+            echo "🧹 Cleanup old containers"
+            echo "==============================="
+
+            docker compose down --remove-orphans || true
+            docker rm -f ecprice-backend ecprice-frontend || true
+
+            echo "==============================="
             echo "🚀 Docker Compose Deploy"
             echo "==============================="
 
