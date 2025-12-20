@@ -1,19 +1,8 @@
 // src/api/axios.ts
 import axios from "axios";
 
-// 환경에 따라 자동 처리
-const getBaseURL = () => {
-  // 도메인 접속이면 무조건 nginx 경유
-  if (window.location.hostname !== 'localhost') {
-    return '/api';
-  }
-
-  // 로컬 개발 환경
-  return 'http://localhost:8080/api';
-};
-
 const api = axios.create({
-  baseURL: getBaseURL(),
+  baseURL: '/api',   // 🔥 무조건 /api
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
