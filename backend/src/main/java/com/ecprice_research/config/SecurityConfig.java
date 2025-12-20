@@ -30,11 +30,7 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
-
-    @PostConstruct
-    public void checkLoaded() {
-        System.out.println("🔥🔥🔥 SECURITY CONFIG LOADED (API AUTH PERMIT ALL) 🔥🔥🔥");
-    }
+    
 
     @Bean
     public PasswordEncoder passwordEncoder() {
