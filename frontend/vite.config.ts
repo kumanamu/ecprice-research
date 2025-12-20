@@ -1,24 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// vite.config.ts
 export default defineConfig({
   plugins: [react()],
-  define: {
-    global: 'window',
-  },
-
   server: {
     port: 5174,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => {
-          console.log('🔥 Proxy rewrite:', path);
-          return path;
-        },
       },
     },
   },
-})
+});
