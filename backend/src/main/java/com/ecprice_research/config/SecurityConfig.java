@@ -80,9 +80,13 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 🔥 전체 허용으로 테스트
-        config.addAllowedOriginPattern("*");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5174",
+                "https://jpkaresearch.store",
+                "https://www.jpkaresearch.store"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
