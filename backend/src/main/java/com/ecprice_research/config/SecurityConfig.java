@@ -30,7 +30,7 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
-    
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -51,10 +51,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/margin/stream").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
 
                             // 🔥 JWT 필터를 CORS 필터 다음에 추가
