@@ -51,8 +51,13 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/margin/stream").permitAll()
+
+                        // 🔥 인증 API 명시적으로 POST 허용
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+
+                        // 🔥 SSE
+                        .requestMatchers(HttpMethod.GET, "/api/margin/stream").permitAll()
+
                         .anyRequest().authenticated()
                 )
 
