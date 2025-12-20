@@ -30,10 +30,12 @@ public class SecurityConfig {
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
+
     @PostConstruct
     public void checkLoaded() {
         System.out.println("🔥🔥🔥 SECURITY CONFIG LOADED (API AUTH PERMIT ALL) 🔥🔥🔥");
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -52,51 +54,44 @@ public class SecurityConfig {
                 // 🔥 CORS를 제일 먼저
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                .authorizeHttpRequests(auth -> {
-                    System.out.println("🔥 APPLYING SECURITY RULES");
-                    auth
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 🔥 여기 핵심
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-
-                        // 🔥 SSE
                         .requestMatchers(HttpMethod.GET, "/api/margin/stream").permitAll()
-
                         .anyRequest().authenticated()
                 )
 
-                // 🔥 JWT 필터를 CORS 필터 다음에 추가
-                .addFilterAfter(
-                        jwtAuthenticationFilter(),
-                        org.springframework.web.filter.CorsFilter.class
-                );
+                            // 🔥 JWT 필터를 CORS 필터 다음에 추가
+                            .addFilterAfter(
+                                    jwtAuthenticationFilter(),
+                                    org.springframework.web.filter.CorsFilter.class
+                            );
 
-        return http.build();
+                    return http.build();
+                }
+
+        @Bean
+        public JwtAuthenticationFilter jwtAuthenticationFilter () {
+            return new JwtAuthenticationFilter(jwtProvider);
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource () {
+            CorsConfiguration config = new CorsConfiguration();
+
+            // 🔥 전체 허용으로 테스트
+            config.setAllowedOrigins(List.of(
+                    "http://localhost:5174",
+                    "https://jpkaresearch.store",
+                    "https://www.jpkaresearch.store"
+            ));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            config.setAllowedHeaders(List.of("*"));
+            config.setAllowCredentials(true);
+            config.setMaxAge(3600L);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", config);
+            return source;
+        }
     }
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtProvider);
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        // 🔥 전체 허용으로 테스트
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5174",
-                "https://jpkaresearch.store",
-                "https://www.jpkaresearch.store"
-        ));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-}
