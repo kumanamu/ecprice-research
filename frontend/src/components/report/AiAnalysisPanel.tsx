@@ -13,29 +13,56 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
   const { lang } = useLang();
   const [mode, setMode] = useState<"basic" | "premium">("basic");
 
+  // ✅ 현재 언어의 텍스트 추출
   const aiText = useMemo(() => {
     const analysis = mode === "basic" ? basicAi : premiumAi;
     if (!analysis) return null;
-    return lang === "ko" ? analysis.textKo : analysis.textJp;
+
+    const text = lang === "ko" ? analysis.textKo : analysis.textJp;
+
+    // ✅ 다른 언어로 토글된 경우
+    if (!text) {
+      return "NEED_RESEARCH";
+    }
+
+    return text;
   }, [basicAi, premiumAi, mode, lang]);
 
-  // ✅ Basic AI도 없으면 아무것도 표시 안 함
-  if (!basicAi) {
-    return null;
+  if (!basicAi) return null;
+
+  // ✅ 재검색 필요
+  if (aiText === "NEED_RESEARCH") {
+    return (
+      <section className="mt-10 bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+        <p className="text-lg font-semibold mb-3">
+          {lang === "ko"
+            ? "🔄 언어가 변경되었습니다"
+            : "🔄 言語が変更されました"}
+        </p>
+        <p className="text-sm text-slate-600 mb-4">
+          {lang === "ko"
+            ? "선택한 언어로 AI 분석을 다시 검색해주세요."
+            : "選択した言語でAI分析を再検索してください。"}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          {lang === "ko" ? "다시 검색하기" : "再検索する"}
+        </button>
+      </section>
+    );
   }
 
-  // ✅ Premium 로딩 중
   const isPremiumLoading = basicAi && !premiumAi && mode === "premium";
 
   return (
     <section className="mt-10">
-      {/* 토글 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-black">
           {lang === "ko" ? "AI 분석 결과" : "AI分析結果"}
         </h2>
 
-        {/* Basic / Premium 토글 */}
         <div className="flex gap-2">
           <button
             onClick={() => setMode("basic")}
@@ -64,7 +91,6 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
         </div>
       </div>
 
-      {/* ✅ Premium 로딩 중 */}
       {isPremiumLoading ? (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
           <p className="text-sm text-blue-700">
@@ -75,7 +101,6 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
         </div>
       ) : aiText ? (
         <>
-          {/* 핵심 요약 */}
           <motion.div
             key={`${mode}-${lang}-summary`}
             initial={{ opacity: 0, y: 8 }}
@@ -90,7 +115,6 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
             </p>
           </motion.div>
 
-          {/* 상세 분석 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {aiText
               .split(/\r?\n{1,}/)

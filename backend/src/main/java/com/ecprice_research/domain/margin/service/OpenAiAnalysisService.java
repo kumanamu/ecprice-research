@@ -17,54 +17,48 @@ public class OpenAiAnalysisService {
     private final OpenAiClient openAiClient;
 
     /**
-     * ✅ 한국어 + 일본어 분석 동시 생성
+     * ✅ analyze 메서드 시그니처 변경: lang 파라미터 추가
      */
-    public AiMarginAnalysis analyze(MarginCompareResult result, boolean premium) {
+    public AiMarginAnalysis analyze(MarginCompareResult result, boolean premium, String lang) {
 
         try {
-            // 1️⃣ 한국어 프롬프트 생성
-            String promptCoreKo = premium
+            // 1️⃣ 프롬프트 생성
+            String promptCore = premium
                     ? PremiumPromptBuilder.build(result)
                     : BasicPromptBuilder.build(result);
 
-            String promptKo = "모든 응답은 한국어로 작성해주세요.\n\n" + promptCoreKo;
+            // 2️⃣ 언어별 지시문 추가
+            String prompt = "ko".equalsIgnoreCase(lang)
+                    ? "모든 응답은 한국어로 작성해주세요.\n\n" + promptCore
+                    : "すべての回答は日本語で書いてください。\n\n" + promptCore;
 
-            // 2️⃣ 일본어 프롬프트 생성
-            String promptCoreJp = premium
-                    ? PremiumPromptBuilder.build(result)
-                    : BasicPromptBuilder.build(result);
+            // 3️⃣ AI 호출 (1번만!)
+            log.info("🤖 [AI Analysis] premium={}, lang={}, platform={}",
+                    premium, lang, result.getBestPlatform());
 
-            String promptJp = "すべての回答は日本語で書いてください。\n\n" + promptCoreJp;
+            String answer = openAiClient.ask(prompt);
+            log.info("✅ [AI Analysis 완료] lang={}", lang);
 
-            // 3️⃣ AI 호출 2번 (한국어 + 일본어)
-            log.info("🤖 [AI Analysis] premium={} bestPlatform={}", premium, result.getBestPlatform());
-
-            String answerKo = openAiClient.ask(promptKo);
-            log.info("🤖 [AI Analysis KO] {}", answerKo);
-
-            String answerJp = openAiClient.ask(promptJp);
-            log.info("🤖 [AI Analysis JP] {}", answerJp);
-
-            // 4️⃣ 결과 반환
+            // 4️⃣ 선택된 언어만 채움
             return AiMarginAnalysis.builder()
                     .buyPlatform(result.getBestPlatform())
                     .sellPlatform("Amazon / Rakuten / Coupang / Naver")
                     .profitKrw(result.getProfitKrw())
                     .profitRate(result.getProfitKrw() > 0 ? 100.0 : 0.0)
-                    .textKo(answerKo)  // ✅ 한국어
-                    .textJp(answerJp)  // ✅ 일본어
-                    .reason(answerKo)
+                    .textKo("ko".equalsIgnoreCase(lang) ? answer : null)
+                    .textJp("jp".equalsIgnoreCase(lang) ? answer : null)
+                    .reason(answer)
                     .build();
 
         } catch (Exception e) {
-            log.error("AI 분석 실패", e);
+            log.error("❌ AI 분석 실패", e);
             return AiMarginAnalysis.builder()
                     .buyPlatform("-")
                     .sellPlatform("-")
                     .profitKrw(0)
                     .profitRate(0)
-                    .textKo("AI 분석 실패")
-                    .textJp("AI分析失敗")
+                    .textKo("ko".equalsIgnoreCase(lang) ? "AI 분석 실패" : null)
+                    .textJp("jp".equalsIgnoreCase(lang) ? "AI分析失敗" : null)
                     .reason("AI 분석 실패")
                     .build();
         }

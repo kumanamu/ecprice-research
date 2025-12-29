@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -100,8 +101,9 @@ public class MarginService {
                 .build();
 
         // 5) Basic / Premium 분석 생성
-        AiMarginAnalysis basic = aiService.analyze(base, false);
-        AiMarginAnalysis premium = aiService.analyze(base, true);
+        // 5) Basic / Premium 분석 생성
+        AiMarginAnalysis basic = aiService.analyze(base, false, lang);  // ✅ lang 추가
+        AiMarginAnalysis premium = aiService.analyze(base, true, lang); // ✅ lang 추가
 
         base.setBasicAi(basic);
         base.setPremiumAi(premium);
@@ -112,6 +114,7 @@ public class MarginService {
     /**
      * ✅ 새로운 SSE 스트리밍 방식
      */
+    // finalCompareStream 메서드만 교체
     public void finalCompareStream(
             String keyword,
             String lang,
@@ -185,27 +188,32 @@ public class MarginService {
                     .jpyToKrw((int) jpyToKrw)
                     .build();
 
-            // ✅ 5) Basic 분석 → 즉시 전송
-            log.info("🤖 [Basic 분석 시작]");
-            AiMarginAnalysis basic = aiService.analyze(base, false);
-            base.setBasicAi(basic);
+            // ✅ 5) Basic/Premium 병렬 실행
+            log.info("🚀 [AI 병렬 분석 시작] lang={}", lang);
 
-            emitter.send(SseEmitter.event()
-                    .name("basic")
-                    .data(base));
+            CompletableFuture<AiMarginAnalysis> basicFuture = CompletableFuture.supplyAsync(() ->
+                    aiService.analyze(base, false, lang)
+            );
+
+            CompletableFuture<AiMarginAnalysis> premiumFuture = CompletableFuture.supplyAsync(() ->
+                    aiService.analyze(base, true, lang)
+            );
+
+            // ✅ 6) Basic 완료 대기 → 전송
+            AiMarginAnalysis basic = basicFuture.join();
+            base.setBasicAi(basic);
+            emitter.send(SseEmitter.event().name("basic").data(base));
             log.info("📤 [Basic 전송 완료]");
 
-            // ✅ 6) Premium 분석 → 즉시 전송
-            log.info("🤖 [Premium 분석 시작]");
-            AiMarginAnalysis premium = aiService.analyze(base, true);
+            // ✅ 7) Premium 완료 대기 → 전송
+            AiMarginAnalysis premium = premiumFuture.join();
             base.setPremiumAi(premium);
-
-            emitter.send(SseEmitter.event()
-                    .name("premium")
-                    .data(base));
+            emitter.send(SseEmitter.event().name("premium").data(base));
             log.info("📤 [Premium 전송 완료]");
 
+            // ✅ 8) 둘 다 완료 후 종료
             emitter.complete();
+            log.info("✅ [SSE 스트림 완료]");
 
         } catch (Exception e) {
             log.error("❌ finalCompareStream 에러", e);
