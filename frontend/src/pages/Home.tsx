@@ -4,86 +4,183 @@ import HomeHeroRaw from "../components/home/HomeHeroRaw";
 import PlatformResultGrid from "../components/report/PlatformResultGrid";
 import PlatformDetailPanel from "../components/report/PlatformDetailPanel";
 import SummaryHeader from "../components/report/SummaryHeader";
+import KeyMetricsSection from "../components/report/KeyMetricsSection";
+import ChartsSection from "../components/report/ChartsSection";
 import AiAnalysisPanel from "../components/report/AiAnalysisPanel";
 import Loader from "../components/common/Loader";
-import ReportSaveBar from "../components/report/ReportSaveBar";
-import ReportHistoryPreview from "../components/report/ReportHistoryPreview";
+import LoginRequiredModal from "../components/common/LoginRequiredModal";
+
 import { useLang } from "../context/LangContext";
-import type { MarginResponse, PriceInfo } from "../types/marginTypes";
+import { useAuth } from "../context/AuthContext";
+import type {
+  MarginResponse,
+  PriceInfo,
+  AiMarginAnalysis,
+} from "../types/marginTypes";
+
+const EXPECTED_PLATFORMS = ["naver", "coupang", "amazon", "rakuten"];
 
 export default function Home() {
   const { lang } = useLang();
-  const [keyword, setKeyword] = useState("");
+  const { isAuthenticated } = useAuth();
 
-  const [platformResults, setPlatformResults] = useState<
-    Record<string, PriceInfo>
-  >({});
-  const [finalResult, setFinalResult] = useState<MarginResponse | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const [platformResults, setPlatformResults] = useState<Record<string, PriceInfo>>({});
+  const platformRef = useRef<Record<string, PriceInfo>>({});
 
   const [loadingPrices, setLoadingPrices] = useState(false);
   const [loadingAi, setLoadingAi] = useState(false);
+  const [finalResult, setFinalResult] = useState<MarginResponse | null>(null);
+
+  const [basicAi, setBasicAi] = useState<AiMarginAnalysis | null>(null);
+  const [premiumAi, setPremiumAi] = useState<AiMarginAnalysis | null>(null);
 
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedData, setSelectedData] = useState<PriceInfo | null>(null);
 
-  const platformRef = useRef<Record<string, PriceInfo>>({});
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const onSearch = () => {
+  const startSearch = () => {
     if (!keyword.trim()) return;
 
     setPlatformResults({});
     setFinalResult(null);
+    setBasicAi(null);
+    setPremiumAi(null);
     platformRef.current = {};
-
     setLoadingPrices(true);
     setLoadingAi(false);
 
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
+    eventSourceRef.current?.close();
 
     const es = new EventSource(
       `/api/margin/stream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
     );
     eventSourceRef.current = es;
 
-    // ✅ SSE platform 이벤트 — 백 계약 그대로
     es.addEventListener("platform", (e) => {
       const parsed = JSON.parse((e as MessageEvent).data);
 
-      const platform: string = parsed.platform;
-      const data: PriceInfo = parsed.data;
+      console.log("📦 플랫폼 수신:", parsed.platform, parsed.data);
 
-      platformRef.current[platform] = data;
+      platformRef.current[parsed.platform] = parsed.data;
       setPlatformResults({ ...platformRef.current });
-    });
 
-    es.addEventListener("done", () => {
-      es.close();
-      eventSourceRef.current = null;
+      const receivedPlatforms = Object.keys(platformRef.current);
+      console.log("📊 현재 받은 플랫폼:", receivedPlatforms);
 
-      setLoadingPrices(false);
-      setLoadingAi(true);
+      const receivedLower = receivedPlatforms.map((p) => p.toLowerCase());
+      const allReceived = EXPECTED_PLATFORMS.every((p) => receivedLower.includes(p));
 
-      fetch(
-        `/api/margin/finalCompare?keyword=${encodeURIComponent(
-          keyword
-        )}&lang=${lang}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify(platformRef.current),
-        }
-      )
-        .then((res) => res.json())
-        .then((data: MarginResponse) => {
-          setFinalResult(data);
-        })
-        .finally(() => setLoadingAi(false));
+      console.log("🔍 allReceived:", allReceived);
+
+      if (allReceived) {
+        console.log("✅ 모든 플랫폼 수신 완료! finalCompareStream 호출");
+
+        es.close();
+        eventSourceRef.current = null;
+
+        setLoadingPrices(false);
+        setLoadingAi(true);
+
+        const token = localStorage.getItem("accessToken");
+
+        console.log("🚀 finalCompareStream 요청 시작");
+
+        fetch(
+          `/api/margin/finalCompareStream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(platformRef.current),
+          }
+        ).then((response) => {
+          console.log("📡 finalCompareStream 응답:", response.status);
+
+          if (!response.ok) {
+            console.error("❌ finalCompareStream 실패:", response.status);
+            setLoadingAi(false);
+            return;
+          }
+
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+
+          if (!reader) {
+            console.error("❌ Reader 없음");
+            setLoadingAi(false);
+            return;
+          }
+
+          let buffer = "";
+
+          function readStream(): void {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                setLoadingAi(false);
+                console.log("✅ SSE 스트림 종료");
+                return;
+              }
+
+              const chunk = decoder.decode(value, { stream: true });
+              console.log("📦 받은 청크:", chunk);
+
+              buffer += chunk;
+              const messages = buffer.split("\n\n");
+              buffer = messages.pop() || "";
+
+              for (const msg of messages) {
+                if (!msg.trim()) continue;
+
+                console.log("📨 메시지:", msg);
+
+                const lines = msg.split("\n");
+                let eventName = "";
+                let eventData = "";
+
+                for (const line of lines) {
+                  if (line.startsWith("event:")) {  // ✅ 공백 제거
+                    eventName = line.substring(6).trim();  // "event:" 길이 = 6
+                  } else if (line.startsWith("data:")) {  // ✅ 공백 제거
+                    eventData = line.substring(5).trim();  // "data:" 길이 = 5
+                  }
+                }
+
+                if (eventName && eventData) {
+                  console.log(`✅ 이벤트: ${eventName}`);
+                  const data = JSON.parse(eventData);
+
+                  if (eventName === "basic") {
+                    console.log("✅ Basic AI 수신:", data);
+                    setFinalResult(data);
+                    setPlatformResults(data.platformPrices);
+                    setBasicAi(data.basicAi);
+                  } else if (eventName === "premium") {
+                    console.log("✅ Premium AI 수신:", data);
+                    setPremiumAi(data.premiumAi);
+                    setLoadingAi(false);
+                  }
+                }
+              }
+
+              readStream();
+            }).catch((err) => {
+              console.error("❌ 스트림 읽기 에러:", err);
+              setLoadingAi(false);
+            });
+          }
+
+          readStream();
+        }).catch((err) => {
+          console.error("❌ finalCompareStream 에러:", err);
+          setLoadingAi(false);
+        });
+      }
     });
 
     es.onerror = () => {
@@ -94,49 +191,51 @@ export default function Home() {
     };
   };
 
+  const onSearch = isAuthenticated ? startSearch : () => setShowLoginModal(true);
+
   return (
     <>
       <HomeHeroRaw
         keyword={keyword}
         onKeywordChange={setKeyword}
         onSearch={onSearch}
+        loading={loadingPrices || loadingAi}
       />
 
-      {loadingPrices && (
-        <Loader
-          label={
-            lang === "ko"
-              ? "플랫폼별 가격 수집 중..."
-              : "プラットフォーム価格取得中..."
-          }
-        />
-      )}
+      {loadingPrices && <Loader label="가격 수집 중..." />}
+      {loadingAi && <Loader label="AI 분석 중..." />}
 
       <div className="max-w-7xl mx-auto px-4 mt-10">
         {Object.keys(platformResults).length > 0 && (
           <PlatformResultGrid
             platformResults={platformResults}
-            onSelect={(platform, data) => {
-              setSelectedPlatform(platform);
-              setSelectedData(data);
+            onSelect={(p, d) => {
+              setSelectedPlatform(p);
+              setSelectedData(d);
             }}
+            isAnalyzing={loadingAi}
           />
-        )}
-
-        {loadingAi && (
-          <Loader label={lang === "ko" ? "AI 분석 중..." : "AI分析中..."} />
         )}
 
         {finalResult && (
           <>
             <SummaryHeader result={finalResult} />
-            <ReportSaveBar onSave={() => {}} />
-            <AiAnalysisPanel result={finalResult} />
+            <KeyMetricsSection
+              platform={finalResult.bestPlatform}
+              profitKrw={finalResult.profitKrw}
+              profitJpy={finalResult.profitJpy}
+              lang={lang}
+              prices={platformResults}
+              jpyToKrw={finalResult.jpyToKrw}
+            />
+            <ChartsSection
+              prices={platformResults}
+              bestPlatform={finalResult.bestPlatform}
+            />
+            <AiAnalysisPanel basicAi={basicAi} premiumAi={premiumAi} />
           </>
         )}
       </div>
-
-      <ReportHistoryPreview items={[]} />
 
       {selectedPlatform && selectedData && (
         <PlatformDetailPanel
@@ -147,6 +246,10 @@ export default function Home() {
             setSelectedData(null);
           }}
         />
+      )}
+
+      {showLoginModal && (
+        <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
       )}
     </>
   );

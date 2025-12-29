@@ -1,102 +1,99 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { AxiosError } from "axios";
+import { useLang } from "../context/LangContext";
+import { t } from "../utils/t";
+import api from "../api/axios";
 
 export default function Login() {
+  const { lang } = useLang();
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
-      await login(email, password);
-      navigate("/home", { replace: true });
-    } catch (err) {
-      if (err instanceof AxiosError) {
-        const status = err.response?.status;
+      console.log("🔑 로그인 시도:", email);
 
-        if (status === 401) {
-          setError("이메일 또는 비밀번호가 올바르지 않습니다.");
-        } else {
-          setError("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        }
-      } else {
-        setError("알 수 없는 오류가 발생했습니다.");
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
+
+      console.log("✅ 백엔드 응답:", response.data);
+
+      // 🔥 응답 형식 확인 후 수정 필요할 수 있음
+      const accessToken = response.data.accessToken || response.data.token || response.data.access_token;
+      const userEmail = response.data.email || email;
+      const role = response.data.role || "ROLE_USER";
+
+      console.log("🔑 추출한 토큰:", accessToken);
+      console.log("👤 유저 정보:", { email: userEmail, role });
+
+      if (!accessToken) {
+        throw new Error("토큰이 응답에 없습니다");
       }
+
+      login(accessToken, { email: userEmail, role });
+
+      console.log("✅ 로그인 완료, /home으로 이동");
+      navigate("/home", { replace: true });
+    } catch (err: any) {
+      console.error("❌ 로그인 에러:", err);
+      console.error("❌ 에러 응답:", err.response?.data);
+
+      setError(
+        lang === "ko"
+          ? `로그인 실패: ${err.response?.data?.message || err.message}`
+          : `ログイン失敗: ${err.response?.data?.message || err.message}`
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-white px-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm pt-16 space-y-6">
-        <h1 className="text-center text-xl font-bold">로그인</h1>
+    <form onSubmit={onSubmit} className="max-w-sm mx-auto pt-20 space-y-6">
+      <h1 className="text-xl font-bold text-center">{t("loginTitle", lang)}</h1>
 
-        <div>
-          <label className="block mb-1 text-sm font-medium">이메일</label>
-          <input
-            className="w-full rounded-lg border px-4 py-3 bg-blue-50"
-            placeholder="이메일을 입력해주세요."
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+      <input
+        placeholder={t("email", lang)}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="w-full px-4 py-3 border rounded-lg"
+      />
 
-        <div>
-          <label className="block mb-1 text-sm font-medium">비밀번호</label>
-          <div className="relative">
-            <input
-              type={showPw ? "text" : "password"}
-              className="w-full rounded-lg border px-4 py-3 bg-blue-50 pr-10"
-              placeholder="비밀번호를 입력해주세요."
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPw((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-            >
-              👁
-            </button>
-          </div>
-        </div>
+      <input
+        type="password"
+        placeholder={t("password", lang)}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full px-4 py-3 border rounded-lg"
+      />
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold disabled:bg-gray-400"
-        >
-          {loading ? "로그인 중..." : "로그인"}
-        </button>
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-3 rounded-lg disabled:opacity-50"
+      >
+        {loading ? t("loginLoading", lang) : t("login", lang)}
+      </button>
 
-        <div className="flex items-center gap-3 text-sm text-gray-400">
-          <div className="flex-1 h-px bg-gray-200" />
-          또는
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
+      <div className="text-center text-sm">{t("or", lang)}</div>
 
-        <Link
-          to="/signup"
-          className="block w-full text-center border py-3 rounded-lg text-blue-600 font-semibold"
-        >
-          회원가입
-        </Link>
-      </form>
-    </div>
+      <Link to="/signup" className="block text-center text-blue-600">
+        {t("signup", lang)}
+      </Link>
+    </form>
   );
 }

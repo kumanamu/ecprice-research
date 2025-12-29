@@ -1,36 +1,60 @@
 // src/components/layout/ReportPanel.tsx
-import { useLang } from "../../context/LangContext";
+
+import type { MarginResponse, PriceInfo } from "../../types/marginTypes";
+import SummaryHeader from "../report/SummaryHeader";
+import KeyMetricsSection from "../report/KeyMetricsSection";
+import ChartsSection from "../report/ChartsSection";
+import AiAnalysisPanel from "../report/AiAnalysisPanel";
+
+export type ReportStage =
+  | "idle"
+  | "prices"
+  | "basic-ai"
+  | "premium-ai";
 
 interface Props {
-  basicAi: string;
-  premiumAi: string;
-  activeTab: "basic" | "premium";
+  stage: ReportStage;
+  result: MarginResponse | null;
+  prices: { [platform: string]: PriceInfo } | null;
+  lang: "ko" | "jp";
 }
 
 export default function ReportPanel({
-  basicAi,
-  premiumAi,
-  activeTab,
+  stage,
+  result,
+  prices,
+  lang,
 }: Props) {
-  const { lang } = useLang();
+  if (!result) return null;
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      {activeTab === "basic" ? (
+    <section className="space-y-6">
+      {/* 1️⃣ 핵심 요약 */}
+      <SummaryHeader result={result} />
+
+      {/* 2️⃣ KPI + 차트 (가격 수집 이후) */}
+      {prices && (
         <>
-          <h2 className="text-xl font-bold mb-2">
-            {lang === "jp" ? "基本分析" : "기본 분석"}
-          </h2>
-          <p className="whitespace-pre-line">{basicAi}</p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-xl font-bold mb-2">
-            {lang === "jp" ? "プレミアム分析" : "프리미엄 분석"}
-          </h2>
-          <p className="whitespace-pre-line">{premiumAi}</p>
+          <KeyMetricsSection
+            platform={result.bestPlatform}
+            profitKrw={result.profitKrw ?? 0}
+            profitJpy={result.profitJpy ?? 0}
+            lang={lang}
+          />
+
+          <ChartsSection prices={prices} lang={lang} />
         </>
       )}
-    </div>
+
+      {/* 3️⃣ AI 기본 분석 */}
+      {(stage === "basic-ai" || stage === "premium-ai") && (
+        <AiAnalysisPanel result={result} mode="basic" />
+      )}
+
+      {/* 4️⃣ AI 프리미엄 분석 */}
+      {stage === "premium-ai" && (
+        <AiAnalysisPanel result={result} mode="premium" />
+      )}
+    </section>
   );
 }

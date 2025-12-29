@@ -1,5 +1,5 @@
 // src/components/layout/Header.tsx
-import ToggleLanguage from "../search/ToggleLanguage";
+import ToggleLanguage from "./ToggleLanguage";
 
 interface Props {
   aiMode: "basic" | "premium";

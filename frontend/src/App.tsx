@@ -8,24 +8,24 @@ import AppHeader from "./components/layout/AppHeader";
 export default function App() {
   return (
     <>
-      {/* ✅ 전역 헤더 (번역 토글 위치) */}
+      {/* ✅ 전 페이지 공통 헤더 (언어 토글 항상 유지) */}
       <AppHeader />
 
       <Routes>
-        {/* 기본 진입 */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* ✅ 첫 진입은 Home */}
+        <Route path="/" element={<Home />} />
 
-        {/* 공개 */}
+        {/* 공개 페이지 */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* 보호 */}
+        {/* 보호 페이지 (추후 마이페이지 / 어드민용) */}
         <Route element={<RequireAuth />}>
           <Route path="/home" element={<Home />} />
         </Route>
 
-        {/* 나머지 */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

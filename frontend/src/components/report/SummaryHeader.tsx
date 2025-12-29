@@ -1,6 +1,7 @@
 // src/components/report/SummaryHeader.tsx
 import type { MarginResponse } from "../../types/marginTypes";
 import { useLang } from "../../context/LangContext";
+import { translatePlatform } from "../../utils/t";
 
 interface Props {
   result: MarginResponse;
@@ -9,11 +10,11 @@ interface Props {
 export default function SummaryHeader({ result }: Props) {
   const { lang } = useLang();
 
-  const best = (result.bestPlatform || "-").toUpperCase();
+  console.log("🔍 SummaryHeader 렌더링:", result); // ✅ 디버깅
 
+  const platformName = translatePlatform(result.bestPlatform || "-", lang);
   const profitKrw = Number(result.profitKrw ?? 0);
   const profitJpy = Number(result.profitJpy ?? 0);
-
   const isZeroProfit = profitKrw === 0 && profitJpy === 0;
 
   return (
@@ -23,7 +24,6 @@ export default function SummaryHeader({ result }: Props) {
           {lang === "ko" ? "📌 핵심 요약" : "📌 主要サマリー"}
         </h2>
 
-        {/* 상태 배지 */}
         <span
           className={
             "text-xs font-bold px-2 py-1 rounded-full border " +
@@ -47,25 +47,25 @@ export default function SummaryHeader({ result }: Props) {
           <span className="font-bold">
             {lang === "ko" ? "최적 플랫폼: " : "最適プラットフォーム: "}
           </span>
-          {best}
+          {platformName}
         </div>
 
         <div>
           <span className="font-bold text-emerald-600">
             {lang === "ko" ? "예상 이익(KRW): " : "予想利益(KRW): "}
           </span>
-          ₩ {profitKrw.toLocaleString()}
+          {lang === "ko" ? "₩" : ""} {profitKrw.toLocaleString()}{" "}
+          {lang === "ko" ? "원" : "ウォン"}
         </div>
 
         <div>
           <span className="font-bold text-indigo-600">
             {lang === "ko" ? "예상 이익(JPY): " : "予想利益(JPY): "}
           </span>
-          ¥ {profitJpy.toLocaleString()}
+          ¥ {profitJpy.toLocaleString()} {lang === "ko" ? "엔" : "円"}
         </div>
       </div>
 
-      {/* 0일 때만 안내 문구 */}
       {isZeroProfit && (
         <div className="mt-3 text-xs text-slate-500 leading-relaxed">
           {lang === "ko" ? (
