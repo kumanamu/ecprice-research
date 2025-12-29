@@ -15,6 +15,13 @@ export default function SummaryHeader({ result }: Props) {
   const platforms = Object.keys(result.platformPrices || {});
   const selectedMargin = result.platformMargins?.[selectedPlatform];
 
+  // 최고 마진 플랫폼 찾기
+  const bestSellPlatform = platforms.reduce((best, current) => {
+    const bestMargin = result.platformMargins?.[best]?.profitKrw || -Infinity;
+    const currentMargin = result.platformMargins?.[current]?.profitKrw || -Infinity;
+    return currentMargin > bestMargin ? current : best;
+  }, platforms[0]);
+
   // 기본값 처리
   if (!selectedMargin) {
     return (
@@ -60,26 +67,19 @@ export default function SummaryHeader({ result }: Props) {
             : "利益なし/保留"}
         </span>
       </div>
-      // 플랫폼 선택 탭 부분 수정
+
+      {/* 플랫폼 선택 탭 */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
         {platforms.map((platform) => {
-          const margin = result.platformMargins?.[platform];
           const isBestBuy = platform === result.bestPlatform;
-          const isBestSell =
-            margin &&
-            margin.profitKrw ===
-              Math.max(
-                ...Object.values(result.platformMargins || {}).map(
-                  (m) => m.profitKrw
-                )
-              );
+          const isBestSell = platform === bestSellPlatform;
 
           return (
             <button
               key={platform}
               onClick={() => setSelectedPlatform(platform)}
               className={
-                "px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all relative " +
+                "px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all " +
                 (selectedPlatform === platform
                   ? "bg-blue-500 text-white shadow-md"
                   : "bg-white text-slate-700 border hover:bg-slate-100")
@@ -88,18 +88,19 @@ export default function SummaryHeader({ result }: Props) {
               {translatePlatform(platform, lang)}
               {isBestBuy && (
                 <span className="ml-1 text-xs">
-                  {lang === "ko" ? "🛒최저" : "🛒最安"}
+                  {lang === "ko" ? "🛒" : "🛒"}
                 </span>
               )}
               {isBestSell && (
                 <span className="ml-1 text-xs">
-                  {lang === "ko" ? "💰최고" : "💰最高"}
+                  {lang === "ko" ? "💰" : "💰"}
                 </span>
               )}
             </button>
           );
         })}
       </div>
+
       {/* 선택된 플랫폼 마진 정보 */}
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
@@ -153,8 +154,8 @@ export default function SummaryHeader({ result }: Props) {
                   : "text-slate-600")
               }
             >
-              {selectedMargin.profitKrw >= 0 ? "+" : ""}₩
-              {selectedMargin.profitKrw.toLocaleString()}{" "}
+              {selectedMargin.profitKrw >= 0 ? "+" : ""}
+              ₩{selectedMargin.profitKrw.toLocaleString()}{" "}
               {lang === "ko" ? "원" : "ウォン"}
             </div>
             <div className="text-xs text-slate-500">
@@ -165,8 +166,13 @@ export default function SummaryHeader({ result }: Props) {
           </div>
         </div>
       </div>
+
       {/* 안내 문구 */}
       <div className="mt-4 pt-4 border-t text-xs text-slate-500">
+        <div className="flex items-center gap-2 mb-2">
+          <span>🛒 = {lang === "ko" ? "최저가 구매처" : "最安値購入先"}</span>
+          <span>💰 = {lang === "ko" ? "최고 마진" : "最高利益"}</span>
+        </div>
         {lang === "ko"
           ? "💡 상세 전략 분석은 아래 AI 분석을 확인하세요"
           : "💡 詳細戦略分析は下記AI分析をご確認ください"}

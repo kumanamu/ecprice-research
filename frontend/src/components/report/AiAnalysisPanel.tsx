@@ -9,44 +9,6 @@ interface Props {
   premiumAi: AiMarginAnalysis | null;
 }
 
-// ✅ 텍스트 파싱 함수
-function parseAiText(text: string) {
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  const sections: { type: string; content: string }[] = [];
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-
-    // 헤더 (### 또는 ────)
-    if (trimmed.startsWith("###") || trimmed.startsWith("────")) {
-      if (trimmed.startsWith("###")) {
-        sections.push({ type: "header", content: trimmed.replace(/^###\s*/, "") });
-      }
-    }
-    // 볼드 텍스트 (**text**)
-    else if (trimmed.includes("**")) {
-      sections.push({
-        type: "bold",
-        content: trimmed.replace(/\*\*/g, ""),
-      });
-    }
-    // 리스트 (- text)
-    else if (trimmed.startsWith("-")) {
-      sections.push({ type: "list", content: trimmed.replace(/^-\s*/, "") });
-    }
-    // 테이블 행 (| text |)
-    else if (trimmed.startsWith("|")) {
-      sections.push({ type: "table", content: trimmed });
-    }
-    // 일반 텍스트
-    else if (trimmed) {
-      sections.push({ type: "text", content: trimmed });
-    }
-  });
-
-  return sections;
-}
-
 export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
   const { lang } = useLang();
   const [mode, setMode] = useState<"basic" | "premium">("basic");
@@ -65,12 +27,6 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
 
     return text;
   }, [basicAi, premiumAi, mode, lang]);
-
-  // ✅ 파싱된 섹션
-  const sections = useMemo(() => {
-    if (!aiText || aiText === "NEED_RESEARCH") return [];
-    return parseAiText(aiText);
-  }, [aiText]);
 
   if (!basicAi) return null;
 
@@ -143,82 +99,96 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
               : "🔄 プレミアム分析を生成中です..."}
           </p>
         </div>
-      ) : sections.length > 0 ? (
-        <AnimatePresence mode="wait">
+      ) : aiText ? (
+        <>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mode}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3"
+            >
+              {/* 핵심 판단 */}
+              <div className="rounded-xl border bg-white p-5 mb-4">
+                <p className="text-sm text-slate-500 mb-1">
+                  {lang === "ko" ? "핵심 판단" : "要点判断"}
+                </p>
+                <p className="font-semibold whitespace-pre-line">
+                  {aiText.split(/\r?\n{1,}/)[0]}
+                </p>
+              </div>
+
+              {/* 상세 분석 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {aiText
+                  .split(/\r?\n{1,}/)
+                  .slice(1)
+                  .filter(Boolean)
+                  .map((text, idx) => (
+                    <div
+                      key={`detail-${idx}`}
+                      className="rounded-xl border bg-slate-50 p-4"
+                    >
+                      <p className="text-sm whitespace-pre-line">{text}</p>
+                    </div>
+                  ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* ⚠️ 면책 조항 UI */}
           <motion.div
-            key={mode}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 p-5 bg-yellow-50 border-2 border-yellow-300 rounded-xl"
           >
-            {sections.map((section, idx) => {
-              // 헤더
-              if (section.type === "header") {
-                return (
-                  <div
-                    key={`section-${idx}`}
-                    className="mt-6 mb-3 pb-2 border-b-2 border-blue-200"
-                  >
-                    <h3 className="text-lg font-bold text-blue-900">
-                      {section.content}
-                    </h3>
-                  </div>
-                );
-              }
-
-              // 강조 텍스트
-              if (section.type === "bold") {
-                return (
-                  <div
-                    key={`section-${idx}`}
-                    className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded"
-                  >
-                    <p className="font-semibold text-slate-800">
-                      {section.content}
-                    </p>
-                  </div>
-                );
-              }
-
-              // 리스트
-              if (section.type === "list") {
-                return (
-                  <div
-                    key={`section-${idx}`}
-                    className="ml-4 flex gap-2 text-sm"
-                  >
-                    <span className="text-blue-600">•</span>
-                    <p className="text-slate-700">{section.content}</p>
-                  </div>
-                );
-              }
-
-              // 테이블
-              if (section.type === "table") {
-                return (
-                  <div
-                    key={`section-${idx}`}
-                    className="bg-slate-100 px-3 py-2 rounded font-mono text-xs overflow-x-auto"
-                  >
-                    <pre className="whitespace-pre">{section.content}</pre>
-                  </div>
-                );
-              }
-
-              // 일반 텍스트
-              return (
-                <div
-                  key={`section-${idx}`}
-                  className="text-sm text-slate-700 leading-relaxed"
-                >
-                  <p>{section.content}</p>
-                </div>
-              );
-            })}
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-yellow-900 mb-3">
+                  {lang === "ko" ? "면책 조항" : "免責事項"}
+                </p>
+                <ul className="text-xs text-yellow-800 space-y-2 leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="mt-0.5">•</span>
+                    <span>
+                      {lang === "ko"
+                        ? "이 분석은 추정치 기반이며, 실제 비용과 20-30% 차이날 수 있습니다."
+                        : "この分析は推定値ベースであり、実際のコストとは20-30%異なる場合があります。"}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-0.5">•</span>
+                    <span>
+                      {lang === "ko"
+                        ? "실제 거래 전 반드시 다음을 직접 확인하세요: 정확한 상품 무게/부피, 실제 배송비 견적, HSCODE 및 관세율, 플랫폼 최신 정책"
+                        : "実際の取引前に必ず次を直接確認してください：正確な商品重量/体積、実際の送料見積もり、HSコードおよび関税率、プラットフォームの最新ポリシー"}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-0.5">•</span>
+                    <span>
+                      {lang === "ko"
+                        ? "환율 변동, 정책 변경, 시장 상황에 따라 수익성이 크게 달라질 수 있습니다."
+                        : "為替レート変動、政策変更、市場状況により収益性が大きく変わる可能性があります。"}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-0.5 font-bold">•</span>
+                    <span className="font-bold">
+                      {lang === "ko"
+                        ? "최종 투자 판단과 그 결과에 대한 책임은 사용자에게 있습니다."
+                        : "最終的な投資判断とその結果に対する責任はユーザーにあります。"}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </motion.div>
-        </AnimatePresence>
+        </>
       ) : null}
     </section>
   );
