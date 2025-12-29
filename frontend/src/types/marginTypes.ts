@@ -26,7 +26,7 @@ export interface PriceInfo {
 }
 
 // ===============================
-// AiMarginAnalysis ← ✅ 수정: textKo, textJp 추가
+// AiMarginAnalysis ← 한국어/일본어 분석
 // ===============================
 export interface AiMarginAnalysis {
   buyPlatform: string;
@@ -34,14 +34,30 @@ export interface AiMarginAnalysis {
   profitKrw: number;
   profitRate: number;
 
-  textKo: string;  // ✅ 한국어 분석
-  textJp: string;  // ✅ 일본어 분석
+  textKo: string;  // 한국어 분석
+  textJp: string;  // 일본어 분석
 
   reason: string;
 }
 
 // ===============================
-// MarginResponse ← 백 DTO 그대로
+// ✅ PlatformMarginInfo (신규 추가)
+// ===============================
+export interface PlatformMarginInfo {
+  sellPlatform: string;
+  buyFrom: string;
+  buyPriceKrw: number;
+  buyPriceJpy: number;
+  sellPriceKrw: number;
+  sellPriceJpy: number;
+  profitKrw: number;
+  profitJpy: number;
+  profitRate: number;
+  feasibility: "PROFIT" | "LOSS" | "NEUTRAL";
+}
+
+// ===============================
+// MarginResponse ← 백엔드 DTO
 // ===============================
 export interface MarginResponse {
   keyword: string;
@@ -56,6 +72,11 @@ export interface MarginResponse {
   profitJpy: number;
 
   jpyToKrw: number;
+
+  // ✅ 추가: 플랫폼별 마진 계산
+  platformMargins?: {
+    [platform: string]: PlatformMarginInfo;
+  };
 
   basicAi: AiMarginAnalysis;
   premiumAi: AiMarginAnalysis;

@@ -1,17 +1,17 @@
 package com.ecprice_research.domain.margin.util;
 
-import com.ecprice_research.domain.margin.dto.MarginCompareResult;
+import com.ecprice_research.domain.margin.dto.MarginFinalResponse;
 import com.ecprice_research.domain.margin.dto.PriceInfo;
 
 public class PremiumPromptBuilder {
 
-    public static String build(MarginCompareResult r) {
+    public static String build(MarginFinalResponse r) {
 
         StringBuilder sb = new StringBuilder();
 
         sb.append("다음은 ECPriceResearch의 프리미엄 분석 요청입니다.\n");
         sb.append("매우 정교하고, 수치 기반이며, 실전 비즈니스 전략 보고서처럼 작성하십시오.\n");
-        sb.append("주어진 가격 데이터를 기반으로 ‘국가별 판매 마진’을 계산하고 최적의 전략을 도출하세요.\n\n");
+        sb.append("주어진 가격 데이터를 기반으로 '국가별 판매 마진'을 계산하고 최적의 전략을 도출하세요.\n\n");
 
         sb.append("검색어: ").append(r.getKeyword()).append("\n");
         sb.append("환율: 1 JPY = ").append(r.getJpyToKrw()).append(" KRW\n\n");
@@ -24,7 +24,7 @@ public class PremiumPromptBuilder {
         });
         sb.append("\n");
 
-        sb.append("※ 반드시 아래의 ‘계산 기준’을 사용해 실전 마진을 계산하십시오.\n\n");
+        sb.append("※ 반드시 아래의 '계산 기준'을 사용해 실전 마진을 계산하십시오.\n\n");
 
         sb.append("────────────────────────────────────\n");
         sb.append("📐 [필수] 국가별 마진 계산 기준 (정확하게 이 공식을 사용)\n");

@@ -1,10 +1,10 @@
 package com.ecprice_research.domain.margin.util;
 
-import com.ecprice_research.domain.margin.dto.MarginCompareResult;
+import com.ecprice_research.domain.margin.dto.MarginFinalResponse;
 
 public class BasicPromptBuilder {
 
-    public static String build(MarginCompareResult r) {
+    public static String build(MarginFinalResponse r) {
 
         StringBuilder sb = new StringBuilder();
 

@@ -1,5 +1,5 @@
 // src/components/report/AiAnalysisPanel.tsx
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
 import type { AiMarginAnalysis } from "../../types/marginTypes";
 import { useLang } from "../../context/LangContext";
@@ -7,6 +7,44 @@ import { useLang } from "../../context/LangContext";
 interface Props {
   basicAi: AiMarginAnalysis | null;
   premiumAi: AiMarginAnalysis | null;
+}
+
+// ✅ 텍스트 파싱 함수
+function parseAiText(text: string) {
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const sections: { type: string; content: string }[] = [];
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    // 헤더 (### 또는 ────)
+    if (trimmed.startsWith("###") || trimmed.startsWith("────")) {
+      if (trimmed.startsWith("###")) {
+        sections.push({ type: "header", content: trimmed.replace(/^###\s*/, "") });
+      }
+    }
+    // 볼드 텍스트 (**text**)
+    else if (trimmed.includes("**")) {
+      sections.push({
+        type: "bold",
+        content: trimmed.replace(/\*\*/g, ""),
+      });
+    }
+    // 리스트 (- text)
+    else if (trimmed.startsWith("-")) {
+      sections.push({ type: "list", content: trimmed.replace(/^-\s*/, "") });
+    }
+    // 테이블 행 (| text |)
+    else if (trimmed.startsWith("|")) {
+      sections.push({ type: "table", content: trimmed });
+    }
+    // 일반 텍스트
+    else if (trimmed) {
+      sections.push({ type: "text", content: trimmed });
+    }
+  });
+
+  return sections;
 }
 
 export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
@@ -27,6 +65,12 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
 
     return text;
   }, [basicAi, premiumAi, mode, lang]);
+
+  // ✅ 파싱된 섹션
+  const sections = useMemo(() => {
+    if (!aiText || aiText === "NEED_RESEARCH") return [];
+    return parseAiText(aiText);
+  }, [aiText]);
 
   if (!basicAi) return null;
 
@@ -60,7 +104,7 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
     <section className="mt-10">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-black">
-          {lang === "ko" ? "AI 분석 결과" : "AI分析結果"}
+          {lang === "ko" ? "🤖 AI 분석 결과" : "🤖 AI分析結果"}
         </h2>
 
         <div className="flex gap-2">
@@ -73,7 +117,7 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200")
             }
           >
-            {lang === "ko" ? "기본 분석" : "基本分析"}
+            {lang === "ko" ? "⚡ 빠른 분석" : "⚡ 簡易分析"}
           </button>
           <button
             onClick={() => setMode("premium")}
@@ -85,7 +129,7 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
             }
             disabled={!premiumAi}
           >
-            {lang === "ko" ? "프리미엄 분석" : "プレミアム分析"}
+            {lang === "ko" ? "💎 상세 전략" : "💎 詳細戦略"}
             {!premiumAi && " ⏳"}
           </button>
         </div>
@@ -99,40 +143,82 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
               : "🔄 プレミアム分析を生成中です..."}
           </p>
         </div>
-      ) : aiText ? (
-        <>
+      ) : sections.length > 0 ? (
+        <AnimatePresence mode="wait">
           <motion.div
-            key={`${mode}-${lang}-summary`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border bg-white p-5 mb-4"
+            key={mode}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
           >
-            <p className="text-sm text-slate-500 mb-1">
-              {lang === "ko" ? "핵심 판단" : "要点判断"}
-            </p>
-            <p className="font-semibold whitespace-pre-line">
-              {aiText.split(/\r?\n{1,}/)[0]}
-            </p>
-          </motion.div>
+            {sections.map((section, idx) => {
+              // 헤더
+              if (section.type === "header") {
+                return (
+                  <div
+                    key={`section-${idx}`}
+                    className="mt-6 mb-3 pb-2 border-b-2 border-blue-200"
+                  >
+                    <h3 className="text-lg font-bold text-blue-900">
+                      {section.content}
+                    </h3>
+                  </div>
+                );
+              }
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {aiText
-              .split(/\r?\n{1,}/)
-              .slice(1)
-              .filter(Boolean)
-              .map((text, idx) => (
-                <motion.div
-                  key={`${mode}-${lang}-${idx}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="rounded-xl border bg-slate-50 p-4"
+              // 강조 텍스트
+              if (section.type === "bold") {
+                return (
+                  <div
+                    key={`section-${idx}`}
+                    className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded"
+                  >
+                    <p className="font-semibold text-slate-800">
+                      {section.content}
+                    </p>
+                  </div>
+                );
+              }
+
+              // 리스트
+              if (section.type === "list") {
+                return (
+                  <div
+                    key={`section-${idx}`}
+                    className="ml-4 flex gap-2 text-sm"
+                  >
+                    <span className="text-blue-600">•</span>
+                    <p className="text-slate-700">{section.content}</p>
+                  </div>
+                );
+              }
+
+              // 테이블
+              if (section.type === "table") {
+                return (
+                  <div
+                    key={`section-${idx}`}
+                    className="bg-slate-100 px-3 py-2 rounded font-mono text-xs overflow-x-auto"
+                  >
+                    <pre className="whitespace-pre">{section.content}</pre>
+                  </div>
+                );
+              }
+
+              // 일반 텍스트
+              return (
+                <div
+                  key={`section-${idx}`}
+                  className="text-sm text-slate-700 leading-relaxed"
                 >
-                  <p className="text-sm whitespace-pre-line">{text}</p>
-                </motion.div>
-              ))}
-          </div>
-        </>
+                  <p>{section.content}</p>
+                </div>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       ) : null}
     </section>
   );
