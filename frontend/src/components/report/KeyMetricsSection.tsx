@@ -8,8 +8,8 @@ interface Props {
   profitKrw: number;
   profitJpy: number;
   lang: "ko" | "jp";
-  prices: Record<string, PriceInfo>; // ✅ 추가
-  jpyToKrw: number; // ✅ 추가
+  prices: Record<string, PriceInfo>;
+  jpyToKrw: number;
 }
 
 export default function KeyMetricsSection({
@@ -24,7 +24,7 @@ export default function KeyMetricsSection({
   const krPlatforms = ["naver", "coupang"];
   const krPrices = Object.entries(prices)
     .filter(([p]) => krPlatforms.includes(p.toLowerCase()))
-    .map(([_, data]) => data.priceKrw ?? Infinity)
+    .map(([, data]) => data.priceKrw ?? Infinity)  // ✅ _ 대신 , 사용 (27번 줄)
     .filter(p => p !== Infinity);
   const krMin = krPrices.length > 0 ? Math.min(...krPrices) : 0;
 
@@ -32,14 +32,14 @@ export default function KeyMetricsSection({
   const jpPlatforms = ["amazon", "rakuten"];
   const jpPrices = Object.entries(prices)
     .filter(([p]) => jpPlatforms.includes(p.toLowerCase()))
-    .map(([_, data]) => data.priceJpy ?? Infinity)
+    .map(([, data]) => data.priceJpy ?? Infinity)  // ✅ _ 대신 , 사용 (35번 줄)
     .filter(p => p !== Infinity);
   const jpMin = jpPrices.length > 0 ? Math.min(...jpPrices) : 0;
 
   // ✅ 마진 계산
   const jpMinInKrw = Math.round(jpMin * jpyToKrw);
-  const krToJpMargin = jpMinInKrw - krMin; // 한국→일본
-  const jpToKrMargin = krMin - jpMinInKrw; // 일본→한국
+  const krToJpMargin = jpMinInKrw - krMin;
+  const jpToKrMargin = krMin - jpMinInKrw;
 
   const bestMargin = Math.max(krToJpMargin, jpToKrMargin);
   const bestDirection = krToJpMargin > jpToKrMargin

@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
 import { t } from "../utils/t";
 import api from "../api/axios";
+import { AxiosError } from "axios";  // ✅ 추가
 
 export default function Login() {
   const { lang } = useLang();
@@ -30,7 +31,6 @@ export default function Login() {
 
       console.log("✅ 백엔드 응답:", response.data);
 
-      // 🔥 응답 형식 확인 후 수정 필요할 수 있음
       const accessToken = response.data.accessToken || response.data.token || response.data.access_token;
       const userEmail = response.data.email || email;
       const role = response.data.role || "ROLE_USER";
@@ -46,15 +46,30 @@ export default function Login() {
 
       console.log("✅ 로그인 완료, /home으로 이동");
       navigate("/home", { replace: true });
-    } catch (err: any) {
+    } catch (err) {  // ✅ unknown 제거
       console.error("❌ 로그인 에러:", err);
-      console.error("❌ 에러 응답:", err.response?.data);
 
-      setError(
-        lang === "ko"
-          ? `로그인 실패: ${err.response?.data?.message || err.message}`
-          : `ログイン失敗: ${err.response?.data?.message || err.message}`
-      );
+      // ✅ axios 에러 타입 체크
+      if (err instanceof AxiosError) {
+        console.error("❌ 에러 응답:", err.response?.data);
+        setError(
+          lang === "ko"
+            ? `로그인 실패: ${err.response?.data?.message || err.message}`
+            : `ログイン失敗: ${err.response?.data?.message || err.message}`
+        );
+      } else if (err instanceof Error) {
+        setError(
+          lang === "ko"
+            ? `로그인 실패: ${err.message}`
+            : `ログイン失敗: ${err.message}`
+        );
+      } else {
+        setError(
+          lang === "ko"
+            ? "로그인 실패: 알 수 없는 오류"
+            : "ログイン失敗: 不明なエラー"
+        );
+      }
     } finally {
       setLoading(false);
     }

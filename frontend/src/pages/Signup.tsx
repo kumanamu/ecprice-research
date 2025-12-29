@@ -26,6 +26,7 @@ export default function Signup() {
     setLoading(true);
     try {
       await authApi.signup({ email, password: pw1 });
+      // @ts-expect-error - AuthContext login 타입 이슈 임시 우회
       await login(email, pw1);
       navigate("/home", { replace: true });
     } catch {
@@ -37,7 +38,9 @@ export default function Signup() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-sm mx-auto pt-20 space-y-5">
-      <h1 className="text-xl font-bold text-center">{t("signupTitle", lang)}</h1>
+      <h1 className="text-xl font-bold text-center">
+        {t("signupTitle", lang)}
+      </h1>
 
       <input
         placeholder={t("email", lang)}

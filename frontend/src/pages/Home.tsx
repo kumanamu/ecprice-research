@@ -120,7 +120,7 @@ export default function Home() {
           let buffer = "";
 
           function readStream(): void {
-            reader.read().then(({ done, value }) => {
+            reader!.read().then(({ done, value }) => {
               if (done) {
                 setLoadingAi(false);
                 console.log("✅ SSE 스트림 종료");
@@ -144,10 +144,10 @@ export default function Home() {
                 let eventData = "";
 
                 for (const line of lines) {
-                  if (line.startsWith("event:")) {  // ✅ 공백 제거
-                    eventName = line.substring(6).trim();  // "event:" 길이 = 6
-                  } else if (line.startsWith("data:")) {  // ✅ 공백 제거
-                    eventData = line.substring(5).trim();  // "data:" 길이 = 5
+                  if (line.startsWith("event:")) {
+                    eventName = line.substring(6).trim();
+                  } else if (line.startsWith("data:")) {
+                    eventData = line.substring(5).trim();
                   }
                 }
 

@@ -22,7 +22,7 @@ export const marginApi = {
   finalCompare: (
     keyword: string,
     lang: string,
-    platformResults: Record<string, any>
+    platformResults: Record<string, unknown>
   ) =>
     api.post(
       "/margin/finalCompare",

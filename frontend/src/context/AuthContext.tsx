@@ -22,12 +22,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ✅ 단일 기준: localStorage → axios → context
   useEffect(() => {
-    const saved = localStorage.getItem("accessToken");
-    if (saved) {
-      setToken(saved);
-      setAxiosToken(saved);
-    }
-  }, []);
+  const saved = localStorage.getItem("accessToken");
+  if (saved) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setToken(saved);
+    setAxiosToken(saved);
+  }
+}, []);
 
   const login = (accessToken: string, user: User) => {
     localStorage.setItem("accessToken", accessToken);
@@ -57,8 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
+
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
