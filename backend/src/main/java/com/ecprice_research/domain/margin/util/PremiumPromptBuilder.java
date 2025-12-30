@@ -218,7 +218,7 @@ public class PremiumPromptBuilder {
         sb.append("4. 각 플랫폼의 최신 판매자 정책 및 수수료 확인\n");
         sb.append("5. 환율 변동 추이 모니터링 및 환헤지 검토\n\n");
 
-        sb.append("【면책】\n");
+        sb.append("【안내】\n");
         sb.append("본 분석은 의사결정 참고 자료일 뿐, 투자 손익을 보장하지 않습니다.\n");
         sb.append("최종 투자 판단과 그 결과에 대한 모든 책임은 사용자에게 있습니다.」\n\n");
 

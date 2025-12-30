@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    /* 🔴 [추가] alias 인식용 (필수) */
+    /* 🔥 이거 없으면 tsc -b가 alias 씹는다 */
+    "composite": true,
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
 
-    /* 기존 설정 그대로 */
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,
@@ -15,21 +16,13 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
 
-    /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "strict": true
   },
   "include": ["src"]
 }

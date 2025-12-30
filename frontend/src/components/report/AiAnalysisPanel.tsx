@@ -205,7 +205,7 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
               <span className="text-2xl">⚠️</span>
               <div className="flex-1">
                 <p className="text-sm font-bold text-yellow-900 mb-3">
-                  {lang === "ko" ? "면책 조항" : "免責事項"}
+                  {lang === "ko" ? "공지 사항" : "免責事項"}
                 </p>
                 <ul className="text-xs text-yellow-800 space-y-2 leading-relaxed">
                   <li className="flex items-start gap-2">
