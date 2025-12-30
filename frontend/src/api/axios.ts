@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
+  baseURL: (import.meta as any).env?.VITE_API_URL || "http://localhost:8080/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,8 +11,12 @@ const api = axios.create({
 // ========================================
 // ✅ 기존 함수들 유지 (AuthContext에서 사용)
 // ========================================
-export const setToken = (token: string) => {
-  localStorage.setItem("token", token);
+export const setToken = (token: string | null) => {
+  if (token) {
+    localStorage.setItem("token", token);
+  } else {
+    localStorage.removeItem("token");
+  }
 };
 
 export const getToken = (): string | null => {
