@@ -1,5 +1,5 @@
 import { t } from "../../utils/t";
-import { Lang } from "../../utils/t";
+import type { Lang } from "../../utils/t";
 
 interface Props {
   label?: string;

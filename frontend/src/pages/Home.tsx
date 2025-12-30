@@ -13,8 +13,8 @@ import LoginRequiredModal from "../components/common/LoginRequiredModal";
 
 import { useLang } from "../context/LangContext";
 import { useAuth } from "../context/AuthContext";
-import { marginStreamUrl } from "@/api/marginApi";  // ✅ 추가
-import { removeToken } from "@/api/axios";  // ✅ 추가
+import { marginStreamUrl } from "../api/marginApi";  // ✅ 수정
+import { removeToken } from "../api/axios";  // ✅ 수정
 import type {
   MarginResponse,
   PriceInfo,
