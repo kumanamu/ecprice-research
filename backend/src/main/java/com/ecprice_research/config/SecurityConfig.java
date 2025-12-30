@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -31,7 +30,6 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -47,44 +45,71 @@ public class SecurityConfig {
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // 🔥 CORS를 제일 먼저
+                // CORS 설정
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
+                // ========================================
+                // 🔥 수정 1: 인증 규칙 강화
+                // ========================================
+                // ❌ BEFORE: .anyRequest().permitAll()
+                // ✅ AFTER: 공개 API만 허용, 나머지 인증 필요
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        // 공개 API (인증 불필요)
+                        .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+
+                        // ✅ 나머지 모든 API는 인증 필수
+                        .anyRequest().authenticated()
                 )
 
-                            // 🔥 JWT 필터를 CORS 필터 다음에 추가
-                            .addFilterAfter(
-                                    jwtAuthenticationFilter(),
-                                    org.springframework.web.filter.CorsFilter.class
+                // ========================================
+                // 🔥 수정 2: 인증 실패 시 401 에러 반환
+                // ========================================
+                // ✅ NEW: 토큰 없거나 만료 시 JSON 에러 응답
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    "{\"error\":\"Unauthorized\",\"message\":\"인증이 필요합니다.\"}"
                             );
+                        })
+                )
 
-                    return http.build();
-                }
+                // ========================================
+                // 🔥 수정 3: JWT 필터 위치 변경
+                // ========================================
+                // ❌ BEFORE: addFilterAfter(CorsFilter.class)
+                // ✅ AFTER: addFilterBefore(UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                        jwtAuthenticationFilter(),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
-        @Bean
-        public JwtAuthenticationFilter jwtAuthenticationFilter () {
-            return new JwtAuthenticationFilter(jwtProvider);
-        }
-
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource () {
-            CorsConfiguration config = new CorsConfiguration();
-
-            // 🔥 전체 허용으로 테스트
-            config.setAllowedOrigins(List.of(
-                    "http://localhost:5174",
-                    "https://jpkaresearch.store",
-                    "https://www.jpkaresearch.store"
-            ));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            config.setAllowedHeaders(List.of("*"));
-            config.setAllowCredentials(true);
-            config.setMaxAge(3600L);
-
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", config);
-            return source;
-        }
+        return http.build();
     }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtProvider);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5174",
+                "https://jpkaresearch.store",
+                "https://www.jpkaresearch.store"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+}
