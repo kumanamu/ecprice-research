@@ -6,7 +6,7 @@
 🔗 **Service**: https://jpkaresearch.store  
 🔗 **GitHub**: https://github.com/kumanamu/ecprice-research
 
-[English Version](ECPriceResearch – README.md)
+[English Version](ECPriceResearchREADME.md)
 
 ---
 
