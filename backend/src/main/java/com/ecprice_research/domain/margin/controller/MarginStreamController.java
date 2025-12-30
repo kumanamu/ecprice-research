@@ -6,6 +6,8 @@ import com.ecprice_research.domain.margin.dto.PriceInfo;
 import com.ecprice_research.domain.margin.util.PriceInfoNormalizer;
 import com.ecprice_research.domain.naver.service.NaverService;
 import com.ecprice_research.domain.rakuten.service.RakutenService;
+import com.ecprice_research.auth.jwt.JwtProvider;
+import com.ecprice_research.auth.exception.AuthException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class MarginStreamController {
     private final RakutenService rakutenService;
     private final NaverService naverService;
     private final CoupangService coupangService;
+    private final JwtProvider jwtProvider;  // ✅ 추가
 
     // ========================================================================
     // 🔥 플랫폼별 서비스 호출
@@ -54,8 +57,23 @@ public class MarginStreamController {
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> stream(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "ko") String lang
+            @RequestParam(defaultValue = "ko") String lang,
+            @RequestParam(required = false) String token  // ✅ 토큰 파라미터 추가
     ) {
+
+        // ✅ 토큰 검증
+        if (token == null || token.trim().isEmpty()) {
+            log.warn("🚨 [SSE] 토큰 없음 - keyword: {}", keyword);
+            throw new AuthException("토큰이 필요합니다.");
+        }
+
+        try {
+            jwtProvider.parse(token);  // 토큰 유효성 검증
+            log.info("✅ [SSE] 토큰 검증 성공 - keyword: {}", keyword);
+        } catch (Exception e) {
+            log.warn("🚨 [SSE] 토큰 검증 실패 - keyword: {}", keyword);
+            throw new AuthException("유효하지 않은 토큰입니다.");
+        }
 
         log.info("🔥 SSE /stream 호출: keyword={}, lang={}", keyword, lang);
 

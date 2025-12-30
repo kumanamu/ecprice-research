@@ -13,18 +13,18 @@ const api = axios.create({
 // ========================================
 export const setToken = (token: string | null) => {
   if (token) {
-    localStorage.setItem("token", token);
+    localStorage.setItem("accessToken", token);  // ✅ accessToken으로 통일
   } else {
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
   }
 };
 
 export const getToken = (): string | null => {
-  return localStorage.getItem("token");
+  return localStorage.getItem("accessToken");  // ✅ accessToken으로 통일
 };
 
 export const removeToken = () => {
-  localStorage.removeItem("token");
+  localStorage.removeItem("accessToken");  // ✅ accessToken으로 통일
 };
 
 // ========================================

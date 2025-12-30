@@ -21,18 +21,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
 
-    // ========================================
-    // 🔥 수정 1: 필터 제외 경로 축소
-    // ========================================
-    // ❌ BEFORE: /api/auth/, /api/margin/stream 모두 제외
-    // ✅ AFTER: 로그인/회원가입만 제외 (SSE도 인증 필요)
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        // 공개 API만 필터 제외
-        return path.equals("/api/auth/login")
-                || path.equals("/api/auth/signup")
+        // ✅ 인증 제외: 로그인/회원가입 + SSE
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/api/margin/stream")
+                || path.startsWith("/api/margin/finalCompareStream")  // ✅ 이 줄만 추가!
                 || path.startsWith("/oauth2/")
                 || path.startsWith("/login/oauth2/");
     }
@@ -46,11 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // ========================================
-        // 🔥 수정 2: 토큰 없으면 401 에러 반환
-        // ========================================
-        // ❌ BEFORE: 토큰 없어도 filterChain.doFilter() 호출 (통과)
-        // ✅ AFTER: 토큰 없으면 401 반환하고 차단
+        // ✅ 토큰 없으면 401 반환
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("🚨 [JWT] 토큰 없음 - URI: {}", request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -58,13 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().write(
                     "{\"error\":\"No token\",\"message\":\"토큰이 필요합니다.\"}"
             );
-            return;  // ✅ 여기서 차단!
+            return;
         }
 
         try {
             String token = authHeader.substring(7);
 
-            // 토큰 검증 (만료 체크 포함)
+            // 토큰 검증
             Claims claims = jwtProvider.parse(token);
             Long userId = Long.valueOf(claims.getSubject());
 
@@ -80,10 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            // ========================================
-            // 🔥 수정 3: 만료된 토큰 명확히 구분
-            // ========================================
-            // ✅ NEW: 만료 에러를 별도 처리
+            // 만료된 토큰
             log.warn("🚨 [JWT] 토큰 만료 - URI: {}", request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
@@ -93,11 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
 
         } catch (Exception e) {
-            // ========================================
-            // 🔥 수정 4: 유효하지 않은 토큰 처리
-            // ========================================
-            // ❌ BEFORE: response.setStatus(401) 후 filterChain 계속 진행
-            // ✅ AFTER: 에러 응답 후 즉시 return
+            // 유효하지 않은 토큰
             log.warn("🚨 [JWT] 토큰 검증 실패 - URI: {}, Error: {}",
                     request.getRequestURI(), e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

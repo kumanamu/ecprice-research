@@ -70,6 +70,20 @@ export default function PlatformResultItem({
           {data.displayPrice || "-"}
         </p>
       )}
+
+      {/* 🔥 상품 링크 추가 */}
+      {data.productUrl && (
+        <a
+          href={data.productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="mt-3 block text-center text-sm text-blue-600
+                     hover:text-blue-800 hover:underline font-medium"
+        >
+          🔗 {lang === "ko" ? "상품 페이지" : "商品ページ"}
+        </a>
+      )}
     </div>
   );
 }

@@ -49,23 +49,25 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // ========================================
-                // 🔥 수정 1: 인증 규칙 강화
+                // 🔥 인증 규칙
                 // ========================================
-                // ❌ BEFORE: .anyRequest().permitAll()
-                // ✅ AFTER: 공개 API만 허용, 나머지 인증 필요
                 .authorizeHttpRequests(auth -> auth
                         // 공개 API (인증 불필요)
                         .requestMatchers("/api/auth/login", "/api/auth/signup").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+
+                        // ✅ SSE 스트리밍 (URL 파라미터로 토큰 전달)
+                        .requestMatchers("/api/margin/stream").permitAll()
+                        .requestMatchers("/api/margin/finalCompareStream").permitAll()  // ✅ 추가!
 
                         // ✅ 나머지 모든 API는 인증 필수
                         .anyRequest().authenticated()
                 )
 
                 // ========================================
-                // 🔥 수정 2: 인증 실패 시 401 에러 반환
+                // 🔥 인증 실패 시 401 에러 반환
                 // ========================================
-                // ✅ NEW: 토큰 없거나 만료 시 JSON 에러 응답
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
@@ -77,10 +79,8 @@ public class SecurityConfig {
                 )
 
                 // ========================================
-                // 🔥 수정 3: JWT 필터 위치 변경
+                // 🔥 JWT 필터
                 // ========================================
-                // ❌ BEFORE: addFilterAfter(CorsFilter.class)
-                // ✅ AFTER: addFilterBefore(UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(
                         jwtAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class

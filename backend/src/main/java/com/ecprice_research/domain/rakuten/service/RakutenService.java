@@ -91,6 +91,14 @@ public class RakutenService {
                     if (title == null || title.isBlank()) continue;
                     if (price == null || price <= 0) continue;
 
+                    // ========================================
+                    // ✅ 여기만 추가! (유효성 검증)
+                    // ========================================
+                    if (!isValidProduct(title)) {
+                        continue;  // 유효하지 않으면 스킵
+                    }
+                    // ========================================
+
                     double score = scoreCandidate(title, price, img, jpKeyword);
 
                     log.info("   [{}] score = {} | {}엔 | {}", i, score, price, title);
@@ -165,6 +173,53 @@ public class RakutenService {
         if (t.contains("互換") || t.contains("パーツ")) score -= 30;
 
         return score;
+    }
+
+
+    // ========================================
+    // ✅ 새로 추가: 유효한 제품인지 검증
+    // ========================================
+    /**
+     * 유효하지 않은 제품 필터링
+     * - 고향세 납부 제품 제외
+     * - 스탠드/배터리/부품 단독 제외
+     */
+    private boolean isValidProduct(String title) {
+
+        // 🚫 1. 고향세 납부 제품 제외
+        if (title.contains("ふるさと納税") ||
+                title.contains("【ふるさと納税】")) {
+            log.info("❌ [RAKUTEN] 고향세 납부 제품 제외: {}", title);
+            return false;
+        }
+
+        // 🚫 2. 스탠드 단독 제품 제외 (청소기 본체 없음)
+        if (title.contains("スタンド") &&
+                !title.contains("掃除機") &&
+                !title.contains("クリーナー") &&
+                !title.contains("本体")) {
+            log.info("❌ [RAKUTEN] 스탠드 단독 제품 제외: {}", title);
+            return false;
+        }
+
+        // 🚫 3. 배터리 단독 제품 제외
+        if ((title.contains("バッテリー") || title.contains("電池")) &&
+                title.contains("のみ") &&
+                !title.contains("本体")) {
+            log.info("❌ [RAKUTEN] 배터리 단독 제품 제외: {}", title);
+            return false;
+        }
+
+        // 🚫 4. 수리/부품 전용 제품 제외
+        if ((title.contains("修理") || title.contains("部品")) &&
+                title.contains("専用") &&
+                !title.contains("本体") &&
+                !title.contains("セット")) {
+            log.info("❌ [RAKUTEN] 수리/부품 전용 제품 제외: {}", title);
+            return false;
+        }
+
+        return true;
     }
 
 

@@ -1,5 +1,6 @@
 // src/pages/Home.tsx
 import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";  // ✅ 추가
 import HomeHeroRaw from "../components/home/HomeHeroRaw";
 import PlatformResultGrid from "../components/report/PlatformResultGrid";
 import PlatformDetailPanel from "../components/report/PlatformDetailPanel";
@@ -12,6 +13,8 @@ import LoginRequiredModal from "../components/common/LoginRequiredModal";
 
 import { useLang } from "../context/LangContext";
 import { useAuth } from "../context/AuthContext";
+import { marginStreamUrl } from "../api/marginApi";  // ✅ 추가
+import { removeToken } from "../api/axios";  // ✅ 추가
 import type {
   MarginResponse,
   PriceInfo,
@@ -23,6 +26,7 @@ const EXPECTED_PLATFORMS = ["naver", "coupang", "amazon", "rakuten"];
 export default function Home() {
   const { lang } = useLang();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();  // ✅ 추가
 
   const [keyword, setKeyword] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -45,6 +49,14 @@ export default function Home() {
   const startSearch = () => {
     if (!keyword.trim()) return;
 
+    // ✅ 토큰 체크 추가
+    const token = localStorage.getItem("accessToken");  // ✅ accessToken으로 수정
+    if (!token) {
+      console.log("🚨 토큰 없음 - 로그인 필요");
+      setShowLoginModal(true);
+      return;
+    }
+
     setPlatformResults({});
     setFinalResult(null);
     setBasicAi(null);
@@ -55,9 +67,11 @@ export default function Home() {
 
     eventSourceRef.current?.close();
 
-    const es = new EventSource(
-      `/api/margin/stream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`
-    );
+    // ✅ marginStreamUrl 사용 (토큰 자동 포함)
+    const streamUrl = marginStreamUrl(keyword, lang);
+    console.log("🔗 SSE URL:", streamUrl);
+
+    const es = new EventSource(streamUrl);
     eventSourceRef.current = es;
 
     es.addEventListener("platform", (e) => {
@@ -85,12 +99,13 @@ export default function Home() {
         setLoadingPrices(false);
         setLoadingAi(true);
 
-        const token = localStorage.getItem("accessToken");
-
         console.log("🚀 finalCompareStream 요청 시작");
 
+        // ✅ 절대 URL 사용
+        const baseURL = (import.meta as any).env?.VITE_API_URL || "http://localhost:8080/api";
+
         fetch(
-          `/api/margin/finalCompareStream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
+          `${baseURL}/margin/finalCompareStream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
           {
             method: "POST",
             headers: {
@@ -101,6 +116,16 @@ export default function Home() {
           }
         ).then((response) => {
           console.log("📡 finalCompareStream 응답:", response.status);
+
+          // ✅ 401 에러 처리 추가
+          if (response.status === 401) {
+            console.error("🚨 인증 만료 - 로그아웃 처리");
+            removeToken();
+            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+            navigate("/login");
+            setLoadingAi(false);
+            return;
+          }
 
           if (!response.ok) {
             console.error("❌ finalCompareStream 실패:", response.status);
@@ -183,11 +208,36 @@ export default function Home() {
       }
     });
 
-    es.onerror = () => {
-      es.close();
-      eventSourceRef.current = null;
-      setLoadingPrices(false);
-      setLoadingAi(false);
+    // ✅ 에러 핸들링 강화
+    es.onerror = (error) => {
+      console.error("🚨 [SSE] 연결 에러:", error);
+
+      // EventSource가 닫혔으면 = 서버에서 연결 거부 (401 등)
+      if (es.readyState === EventSource.CLOSED) {
+        console.log("🚨 [SSE] 인증 실패 - 로그아웃 처리");
+
+        es.close();
+        eventSourceRef.current = null;
+
+        // 토큰 삭제
+        removeToken();
+
+        // 로딩 상태 해제
+        setLoadingPrices(false);
+        setLoadingAi(false);
+
+        // 로그아웃 알림
+        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+
+        // 로그인 페이지로 이동
+        navigate("/login");
+      } else {
+        // 일반 네트워크 에러
+        es.close();
+        eventSourceRef.current = null;
+        setLoadingPrices(false);
+        setLoadingAi(false);
+      }
     };
   };
 
