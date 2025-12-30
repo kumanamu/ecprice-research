@@ -6,7 +6,7 @@ personal project designed for real-world operation**
 🔗 **Service**: https://jpkaresearch.store  
 🔗 **GitHub**: https://github.com/kumanamu/ecprice-research
 
-[日本語版はこちら](README.jp.md)
+[日本語版はこちら](ECPriceResearchREADME.jp.md)
 
 ---
 
