@@ -1,5 +1,12 @@
 {
   "compilerOptions": {
+    /* 🔴 [추가] alias 인식용 (필수) */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    /* 기존 설정 그대로 */
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,

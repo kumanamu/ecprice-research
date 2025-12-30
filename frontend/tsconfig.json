@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    /* 🔥 alias 정의 (핵심) */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
@@ -15,7 +21,7 @@
     "isolatedModules": true,
     "noEmit": true,
 
-    "jsx": "react-jsx"   // 🔥 이거 없으면 전부 터진다
+    "jsx": "react-jsx"
   },
   "include": ["src"]
 }
