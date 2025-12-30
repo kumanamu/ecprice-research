@@ -39,12 +39,30 @@ public class OpenAiAnalysisService {
             String answer = openAiClient.ask(prompt);
             log.info("✅ [AI Analysis 완료] lang={}", lang);
 
-            // 4️⃣ 선택된 언어만 채움
+            // 4️⃣ 최대 마진 계산 (platformMargins에서)
+            int maxProfitKrw = 0;
+            double maxProfitRate = 0.0;
+
+            if (result.getPlatformMargins() != null && !result.getPlatformMargins().isEmpty()) {
+                maxProfitKrw = result.getPlatformMargins().values().stream()
+                        .mapToInt(MarginFinalResponse.PlatformMarginInfo::getProfitKrw)
+                        .max()
+                        .orElse(0);
+
+                maxProfitRate = result.getPlatformMargins().values().stream()
+                        .mapToDouble(MarginFinalResponse.PlatformMarginInfo::getProfitRate)
+                        .max()
+                        .orElse(0.0);
+            }
+
+            log.info("💰 [최대 마진] profitKrw={}, profitRate={}%", maxProfitKrw, maxProfitRate);
+
+            // 5️⃣ AiMarginAnalysis 생성
             return AiMarginAnalysis.builder()
                     .buyPlatform(result.getBestPlatform())
                     .sellPlatform("Amazon / Rakuten / Coupang / Naver")
-                    .profitKrw(result.getProfitKrw())
-                    .profitRate(result.getProfitKrw() > 0 ? 100.0 : 0.0)
+                    .profitKrw(maxProfitKrw)  // ✅ 최대 마진!
+                    .profitRate(maxProfitRate)  // ✅ 최대 마진율!
                     .textKo("ko".equalsIgnoreCase(lang) ? answer : null)
                     .textJp("jp".equalsIgnoreCase(lang) ? answer : null)
                     .reason(answer)
