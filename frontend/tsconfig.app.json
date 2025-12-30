@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    /* 🔥 이거 없으면 tsc -b가 alias 씹는다 */
     "composite": true,
 
     "baseUrl": ".",
@@ -17,6 +16,8 @@
     "skipLibCheck": true,
 
     "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,

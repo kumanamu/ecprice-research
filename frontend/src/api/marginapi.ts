@@ -17,7 +17,7 @@ export const marginStreamUrl = (keyword: string, lang: string) => {
     params.append("token", token);
   }
 
-  const baseURL = (import.meta as any).env?.VITE_API_URL || "http://localhost:8080/api";
+const baseURL = import.meta.env?.VITE_API_URL || "http://localhost:8080/api";
   return `${baseURL}/margin/stream?${params.toString()}`;
 };
 

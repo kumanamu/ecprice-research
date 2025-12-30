@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { setToken as setAxiosToken } from "../api/axios";
 
 interface User {
@@ -17,18 +17,16 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  // ✅ useState 초기값으로 localStorage 읽기 (useEffect 대신)
+  const [token, setToken] = useState<string | null>(() => {
+    const saved = localStorage.getItem("accessToken");
+    if (saved) {
+      setAxiosToken(saved);  // axios에도 설정
+    }
+    return saved;  // state 초기값
+  });
 
-  // ✅ 단일 기준: localStorage → axios → context
-  useEffect(() => {
-  const saved = localStorage.getItem("accessToken");
-  if (saved) {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setToken(saved);
-    setAxiosToken(saved);
-  }
-}, []);
+  const [user, setUser] = useState<User | null>(null);
 
   const login = (accessToken: string, user: User) => {
     localStorage.setItem("accessToken", accessToken);
@@ -58,9 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
-
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
