@@ -15,7 +15,7 @@ import {
   TrendingDown,
   Shield,
   Activity,
-  Zap
+  Zap,
 } from "lucide-react";
 
 interface Props {
@@ -45,27 +45,41 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
   const parsedSections = useMemo(() => {
     if (!aiText || aiText === "NEED_RESEARCH") return [];
 
-    const sections: Array<{ title: string; content: string; icon: React.ComponentType<any>; color: string }> = [];
-    const lines = aiText.split('\n');
+    const sections: Array<{
+      title: string;
+      content: string;
+      icon: React.ComponentType<{ className?: string }>;
+      color: string;
+    }> = [];
+    const lines = aiText.split("\n");
 
-    let currentTitle = '';
+    let currentTitle = "";
     let currentContent: string[] = [];
 
     for (const line of lines) {
       // **제목** 형태 찾기 (이모지 제거)
-      if (line.trim().startsWith('**') && line.includes('**', 2)) {
+      if (line.trim().startsWith("**") && line.includes("**", 2)) {
         if (currentTitle) {
           const { icon, color } = getSectionStyle(currentTitle);
           sections.push({
-            title: currentTitle.replace(/\*\*/g, '').replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim(),
-            content: currentContent.join('\n').trim(),
+            title: currentTitle
+              .replace(/\*\*/g, "")
+              .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+              .trim(),
+            content: currentContent.join("\n").trim(),
             icon,
-            color
+            color,
           });
         }
-        currentTitle = line.replace(/\*\*/g, '').trim();
+        currentTitle = line.replace(/\*\*/g, "").trim();
         currentContent = [];
-      } else if (currentTitle && line.trim() && !line.includes('─') && !line.includes('안내사항') && !line.includes('重要')) {
+      } else if (
+        currentTitle &&
+        line.trim() &&
+        !line.includes("─") &&
+        !line.includes("안내사항") &&
+        !line.includes("重要")
+      ) {
         currentContent.push(line);
       }
     }
@@ -74,14 +88,19 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
     if (currentTitle && currentContent.length > 0) {
       const { icon, color } = getSectionStyle(currentTitle);
       sections.push({
-        title: currentTitle.replace(/\*\*/g, '').replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim(),
-        content: currentContent.join('\n').trim(),
+        title: currentTitle
+          .replace(/\*\*/g, "")
+          .replace(/[\u{1F300}-\u{1F9FF}]/gu, "")
+          .trim(),
+        content: currentContent.join("\n").trim(),
         icon,
-        color
+        color,
       });
     }
 
-    return sections.filter(s => !s.title.includes('안내') && !s.title.includes('免責'));
+    return sections.filter(
+      (s) => !s.title.includes("안내") && !s.title.includes("免責")
+    );
   }, [aiText]);
 
   // 결론 판단
@@ -275,32 +294,56 @@ export default function AiAnalysisPanel({ basicAi, premiumAi }: Props) {
 // =========================================
 // 🎯 섹션 스타일 결정
 // =========================================
-function getSectionStyle(title: string): { icon: React.ComponentType<any>; color: string } {
-  if (title.includes('결론') || title.includes('판단') || title.includes('判断')) {
-    return { icon: Target, color: 'blue' };
+function getSectionStyle(title: string): {
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+} {
+  if (
+    title.includes("결론") ||
+    title.includes("판단") ||
+    title.includes("判断")
+  ) {
+    return { icon: Target, color: "blue" };
   }
-  if (title.includes('ROI') || title.includes('수익') || title.includes('収益')) {
-    return { icon: TrendingUp, color: 'green' };
+  if (
+    title.includes("ROI") ||
+    title.includes("수익") ||
+    title.includes("収益")
+  ) {
+    return { icon: TrendingUp, color: "green" };
   }
-  if (title.includes('손익') || title.includes('BEP') || title.includes('break')) {
-    return { icon: Activity, color: 'emerald' };
+  if (
+    title.includes("손익") ||
+    title.includes("BEP") ||
+    title.includes("break")
+  ) {
+    return { icon: Activity, color: "emerald" };
   }
-  if (title.includes('비용') || title.includes('コスト') || title.includes('계산')) {
-    return { icon: DollarSign, color: 'indigo' };
+  if (
+    title.includes("비용") ||
+    title.includes("コスト") ||
+    title.includes("계산")
+  ) {
+    return { icon: DollarSign, color: "indigo" };
   }
-  if (title.includes('시장') || title.includes('市場') || title.includes('경쟁') || title.includes('競争')) {
-    return { icon: BarChart3, color: 'purple' };
+  if (
+    title.includes("시장") ||
+    title.includes("市場") ||
+    title.includes("경쟁") ||
+    title.includes("競争")
+  ) {
+    return { icon: BarChart3, color: "purple" };
   }
-  if (title.includes('환율') || title.includes('為替')) {
-    return { icon: TrendingDown, color: 'cyan' };
+  if (title.includes("환율") || title.includes("為替")) {
+    return { icon: TrendingDown, color: "cyan" };
   }
-  if (title.includes('리스크') || title.includes('リスク')) {
-    return { icon: Shield, color: 'red' };
+  if (title.includes("리스크") || title.includes("リスク")) {
+    return { icon: Shield, color: "red" };
   }
-  if (title.includes('재고') || title.includes('在庫')) {
-    return { icon: Zap, color: 'orange' };
+  if (title.includes("재고") || title.includes("在庫")) {
+    return { icon: Zap, color: "orange" };
   }
-  return { icon: BarChart3, color: 'slate' };
+  return { icon: BarChart3, color: "slate" };
 }
 
 // =========================================
@@ -311,7 +354,7 @@ function AnalysisSection({
   content,
   icon: Icon,
   color,
-  isPremium
+  isPremium,
 }: {
   title: string;
   content: string;
@@ -320,21 +363,22 @@ function AnalysisSection({
   isPremium: boolean;
 }) {
   const colorClasses = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-    indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    cyan: 'bg-cyan-50 border-cyan-200 text-cyan-700',
-    red: 'bg-red-50 border-red-200 text-red-700',
-    orange: 'bg-orange-50 border-orange-200 text-orange-700',
-    slate: 'bg-slate-50 border-slate-200 text-slate-700',
+    blue: "bg-blue-50 border-blue-200 text-blue-700",
+    green: "bg-green-50 border-green-200 text-green-700",
+    emerald: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    indigo: "bg-indigo-50 border-indigo-200 text-indigo-700",
+    purple: "bg-purple-50 border-purple-200 text-purple-700",
+    cyan: "bg-cyan-50 border-cyan-200 text-cyan-700",
+    red: "bg-red-50 border-red-200 text-red-700",
+    orange: "bg-orange-50 border-orange-200 text-orange-700",
+    slate: "bg-slate-50 border-slate-200 text-slate-700",
   };
 
-  const bgClass = colorClasses[color as keyof typeof colorClasses] || colorClasses.slate;
+  const bgClass =
+    colorClasses[color as keyof typeof colorClasses] || colorClasses.slate;
 
   // 숫자 강조 처리
-  const processedContent = content.split('\n').map((line, idx) => {
+  const processedContent = content.split("\n").map((line, idx) => {
     // 숫자가 포함된 라인 감지
     const hasNumber = /[\d,]+[원%ウォン]|ROI|BEP/.test(line);
 
@@ -352,7 +396,11 @@ function AnalysisSection({
       className={`${bgClass} border-2 rounded-xl p-5 hover:shadow-lg transition-shadow`}
     >
       <div className="flex items-start gap-3">
-        <div className={`mt-1 ${isPremium ? 'w-10 h-10' : 'w-8 h-8'} flex-shrink-0`}>
+        <div
+          className={`mt-1 ${
+            isPremium ? "w-10 h-10" : "w-8 h-8"
+          } flex-shrink-0`}
+        >
           <Icon className="w-full h-full" strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">
@@ -407,7 +455,12 @@ function DecisionCard({
     },
   };
 
-  const { bg, icon: Icon, text, desc } = config[decision as keyof typeof config];
+  const {
+    bg,
+    icon: Icon,
+    text,
+    desc,
+  } = config[decision as keyof typeof config];
 
   return (
     <motion.div
@@ -429,7 +482,9 @@ function DecisionCard({
             {lang === "ko" ? "예상 수익" : "予想収益"}
           </p>
           <p className="text-2xl font-bold">
-            {profit > 0 ? `+${profit.toLocaleString()}` : profit.toLocaleString()}{" "}
+            {profit > 0
+              ? `+${profit.toLocaleString()}`
+              : profit.toLocaleString()}{" "}
             {lang === "ko" ? "원" : "ウォン"}
           </p>
         </div>

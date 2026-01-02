@@ -30,7 +30,9 @@ export default function Home() {
   const [keyword, setKeyword] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const [platformResults, setPlatformResults] = useState<Record<string, PriceInfo>>({});
+  const [platformResults, setPlatformResults] = useState<
+    Record<string, PriceInfo>
+  >({});
   const platformRef = useRef<Record<string, PriceInfo>>({});
 
   const [loadingPrices, setLoadingPrices] = useState(false);
@@ -83,7 +85,9 @@ export default function Home() {
       console.log("📊 현재 받은 플랫폼:", receivedPlatforms);
 
       const receivedLower = receivedPlatforms.map((p) => p.toLowerCase());
-      const allReceived = EXPECTED_PLATFORMS.every((p) => receivedLower.includes(p));
+      const allReceived = EXPECTED_PLATFORMS.every((p) =>
+        receivedLower.includes(p)
+      );
 
       console.log("🔍 allReceived:", allReceived);
 
@@ -98,10 +102,13 @@ export default function Home() {
 
         console.log("🚀 finalCompareStream 요청 시작");
 
-        const baseURL = (import.meta as any).env?.VITE_API_URL || "http://localhost:8080/api";
+        const baseURL =
+          import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
         fetch(
-          `${baseURL}/margin/finalCompareStream?keyword=${encodeURIComponent(keyword)}&lang=${lang}`,
+          `${baseURL}/margin/finalCompareStream?keyword=${encodeURIComponent(
+            keyword
+          )}&lang=${lang}`,
           {
             method: "POST",
             headers: {
@@ -110,96 +117,101 @@ export default function Home() {
             },
             body: JSON.stringify(platformRef.current),
           }
-        ).then((response) => {
-          console.log("📡 finalCompareStream 응답:", response.status);
+        )
+          .then((response) => {
+            console.log("📡 finalCompareStream 응답:", response.status);
 
-          if (response.status === 401) {
-            console.error("🚨 인증 만료 - 로그아웃 처리");
-            logout();
-            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            navigate("/login");
-            setLoadingAi(false);
-            return;
-          }
-
-          if (!response.ok) {
-            console.error("❌ finalCompareStream 실패:", response.status);
-            setLoadingAi(false);
-            return;
-          }
-
-          const reader = response.body?.getReader();
-          const decoder = new TextDecoder();
-
-          if (!reader) {
-            console.error("❌ Reader 없음");
-            setLoadingAi(false);
-            return;
-          }
-
-          let buffer = "";
-
-          function readStream(): void {
-            reader!.read().then(({ done, value }) => {
-              if (done) {
-                setLoadingAi(false);
-                console.log("✅ SSE 스트림 종료");
-                return;
-              }
-
-              const chunk = decoder.decode(value, { stream: true });
-              console.log("📦 받은 청크:", chunk);
-
-              buffer += chunk;
-              const messages = buffer.split("\n\n");
-              buffer = messages.pop() || "";
-
-              for (const msg of messages) {
-                if (!msg.trim()) continue;
-
-                console.log("📨 메시지:", msg);
-
-                const lines = msg.split("\n");
-                let eventName = "";
-                let eventData = "";
-
-                for (const line of lines) {
-                  if (line.startsWith("event:")) {
-                    eventName = line.substring(6).trim();
-                  } else if (line.startsWith("data:")) {
-                    eventData = line.substring(5).trim();
-                  }
-                }
-
-                if (eventName && eventData) {
-                  console.log(`✅ 이벤트: ${eventName}`);
-                  const data = JSON.parse(eventData);
-
-                  if (eventName === "basic") {
-                    console.log("✅ Basic AI 수신:", data);
-                    setFinalResult(data);
-                    setPlatformResults(data.platformPrices);
-                    setBasicAi(data.basicAi);
-                  } else if (eventName === "premium") {
-                    console.log("✅ Premium AI 수신:", data);
-                    setPremiumAi(data.premiumAi);
-                    setLoadingAi(false);
-                  }
-                }
-              }
-
-              readStream();
-            }).catch((err) => {
-              console.error("❌ 스트림 읽기 에러:", err);
+            if (response.status === 401) {
+              console.error("🚨 인증 만료 - 로그아웃 처리");
+              logout();
+              alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+              navigate("/login");
               setLoadingAi(false);
-            });
-          }
+              return;
+            }
 
-          readStream();
-        }).catch((err) => {
-          console.error("❌ finalCompareStream 에러:", err);
-          setLoadingAi(false);
-        });
+            if (!response.ok) {
+              console.error("❌ finalCompareStream 실패:", response.status);
+              setLoadingAi(false);
+              return;
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (!reader) {
+              console.error("❌ Reader 없음");
+              setLoadingAi(false);
+              return;
+            }
+
+            let buffer = "";
+
+            function readStream(): void {
+              reader!
+                .read()
+                .then(({ done, value }) => {
+                  if (done) {
+                    setLoadingAi(false);
+                    console.log("✅ SSE 스트림 종료");
+                    return;
+                  }
+
+                  const chunk = decoder.decode(value, { stream: true });
+                  console.log("📦 받은 청크:", chunk);
+
+                  buffer += chunk;
+                  const messages = buffer.split("\n\n");
+                  buffer = messages.pop() || "";
+
+                  for (const msg of messages) {
+                    if (!msg.trim()) continue;
+
+                    console.log("📨 메시지:", msg);
+
+                    const lines = msg.split("\n");
+                    let eventName = "";
+                    let eventData = "";
+
+                    for (const line of lines) {
+                      if (line.startsWith("event:")) {
+                        eventName = line.substring(6).trim();
+                      } else if (line.startsWith("data:")) {
+                        eventData = line.substring(5).trim();
+                      }
+                    }
+
+                    if (eventName && eventData) {
+                      console.log(`✅ 이벤트: ${eventName}`);
+                      const data = JSON.parse(eventData);
+
+                      if (eventName === "basic") {
+                        console.log("✅ Basic AI 수신:", data);
+                        setFinalResult(data);
+                        setPlatformResults(data.platformPrices);
+                        setBasicAi(data.basicAi);
+                      } else if (eventName === "premium") {
+                        console.log("✅ Premium AI 수신:", data);
+                        setPremiumAi(data.premiumAi);
+                        setLoadingAi(false);
+                      }
+                    }
+                  }
+
+                  readStream();
+                })
+                .catch((err) => {
+                  console.error("❌ 스트림 읽기 에러:", err);
+                  setLoadingAi(false);
+                });
+            }
+
+            readStream();
+          })
+          .catch((err) => {
+            console.error("❌ finalCompareStream 에러:", err);
+            setLoadingAi(false);
+          });
       }
     });
 
@@ -229,7 +241,9 @@ export default function Home() {
     };
   };
 
-  const onSearch = isAuthenticated ? startSearch : () => setShowLoginModal(true);
+  const onSearch = isAuthenticated
+    ? startSearch
+    : () => setShowLoginModal(true);
 
   return (
     <>

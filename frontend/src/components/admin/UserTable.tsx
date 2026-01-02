@@ -1,7 +1,7 @@
 // src/components/admin/UserTable.tsx
 import { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi";
-import type { UserListPageResponse, UserListItem } from "../../types/adminTypes";
+import { adminApi } from "../../api/adminapi";
+import type { UserListPageResponse, UserListItem } from "../../types/Admintypes";
 import { ChevronLeft, ChevronRight, Shield, User } from "lucide-react";
 
 export default function UserTable() {

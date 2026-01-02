@@ -1,7 +1,7 @@
 // src/components/admin/StatsDashboard.tsx
 import { useEffect, useState } from "react";
-import { adminApi } from "../../api/adminApi";
-import type { UserStats } from "../../types/adminTypes";
+import { adminApi } from "../../api/adminapi";
+import type { UserStats } from "../../types/Admintypes";
 import { Users, UserCheck, UserCog, Calendar, TrendingUp } from "lucide-react";
 
 export default function StatsDashboard() {
