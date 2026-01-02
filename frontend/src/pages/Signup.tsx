@@ -37,8 +37,8 @@ export default function Signup() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="max-w-sm mx-auto pt-20 space-y-5">
-      <h1 className="text-xl font-bold text-center">
+    <form onSubmit={onSubmit} className="max-w-sm md:max-w-md mx-auto px-4 md:px-0 pt-10 md:pt-20 space-y-4 md:space-y-5">
+      <h1 className="text-xl md:text-2xl font-bold text-center">
         {t("signupTitle", lang)}
       </h1>
 
@@ -46,7 +46,7 @@ export default function Signup() {
         placeholder={t("email", lang)}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full px-4 py-3 border rounded-lg"
+        className="w-full px-4 py-2.5 md:py-3 border rounded-lg text-base"
       />
 
       <input
@@ -54,7 +54,7 @@ export default function Signup() {
         placeholder={t("password", lang)}
         value={pw1}
         onChange={(e) => setPw1(e.target.value)}
-        className="w-full px-4 py-3 border rounded-lg"
+        className="w-full px-4 py-2.5 md:py-3 border rounded-lg text-base"
       />
 
       <input
@@ -62,16 +62,16 @@ export default function Signup() {
         placeholder={t("password", lang)}
         value={pw2}
         onChange={(e) => setPw2(e.target.value)}
-        className="w-full px-4 py-3 border rounded-lg"
+        className="w-full px-4 py-2.5 md:py-3 border rounded-lg text-base"
       />
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      <button className="w-full bg-blue-600 text-white py-3 rounded-lg">
+      <button className="w-full bg-blue-600 text-white py-2.5 md:py-3 rounded-lg text-base md:text-lg font-medium">
         {loading ? t("signupLoading", lang) : t("signup", lang)}
       </button>
 
-      <Link to="/login" className="block text-center text-sm text-blue-600">
+      <Link to="/login" className="block text-center text-sm md:text-base text-blue-600">
         {t("backToLogin", lang)}
       </Link>
     </form>

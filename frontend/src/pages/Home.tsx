@@ -243,7 +243,7 @@ export default function Home() {
       {loadingPrices && <Loader label="가격 수집 중..." />}
       {loadingAi && <Loader label="AI 분석 중..." />}
 
-      <div className="max-w-7xl mx-auto px-4 mt-10">
+      <div className="max-w-7xl mx-auto px-4 mt-6 md:mt-10">
         {Object.keys(platformResults).length > 0 && (
           <PlatformResultGrid
             platformResults={platformResults}

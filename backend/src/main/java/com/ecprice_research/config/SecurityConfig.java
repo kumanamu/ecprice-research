@@ -60,6 +60,7 @@ public class SecurityConfig {
                         // ✅ SSE 스트리밍 (URL 파라미터로 토큰 전달)
                         .requestMatchers("/api/margin/stream").permitAll()
                         .requestMatchers("/api/margin/finalCompareStream").permitAll()  // ✅ 추가!
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // 추가!
 
                         // ✅ 나머지 모든 API는 인증 필수
                         .anyRequest().authenticated()

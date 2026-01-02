@@ -27,13 +27,17 @@ public class JwtProvider {
                 expirationMs, expirationMs / 1000 / 60);
     }
 
-    public String createToken(Long userId, String email) {
+    /**
+     * JWT 토큰 생성 (role 포함)
+     */
+    public String createToken(Long userId, String email, String role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("email", email)
+                .claim("role", role)  // ✅ role 추가
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(Keys.hmacShaKeyFor(secretKey.getBytes()), SignatureAlgorithm.HS256)

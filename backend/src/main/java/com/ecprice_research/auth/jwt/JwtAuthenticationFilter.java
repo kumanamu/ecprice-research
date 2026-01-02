@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // ✅ 인증 제외: 로그인/회원가입 + SSE
         return path.startsWith("/api/auth/")
                 || path.startsWith("/api/margin/stream")
-                || path.startsWith("/api/margin/finalCompareStream")  // ✅ 이 줄만 추가!
+                || path.startsWith("/api/margin/finalCompareStream")
                 || path.startsWith("/oauth2/")
                 || path.startsWith("/login/oauth2/");
     }
@@ -59,14 +60,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 토큰 검증
             Claims claims = jwtProvider.parse(token);
             Long userId = Long.valueOf(claims.getSubject());
+            String role = claims.get("role", String.class);  // ✅ role 추출
 
-            log.debug("✅ [JWT] 인증 성공 - userId: {}", userId);
+            log.debug("✅ [JWT] 인증 성공 - userId: {}, role: {}", userId, role);
+
+            // ✅ 권한 설정 (ROLE_ prefix 없이 저장했으면 그대로, 있으면 그대로)
+            List<SimpleGrantedAuthority> authorities = List.of(
+                    new SimpleGrantedAuthority(role)  // ✅ role을 권한으로 설정
+            );
 
             // 인증 정보 설정
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     userId,
                     null,
-                    List.of()
+                    authorities  // ✅ 권한 리스트 전달
             );
 
             SecurityContextHolder.getContext().setAuthentication(auth);

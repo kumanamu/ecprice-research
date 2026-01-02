@@ -47,7 +47,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                 .build()
                 ));
 
-        String jwt = jwtProvider.createToken(user.getId(), user.getEmail());
+        String jwt = jwtProvider.createToken(user.getId(), user.getEmail(), user.getRole().name());
 
         // ✅ 환경변수 기반 redirect
         String redirectUrl = frontendRedirectUrl + "?token=" + jwt;

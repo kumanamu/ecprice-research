@@ -4,6 +4,7 @@ import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import RequireAuth from "./auth/RequireAuth";
 import AppHeader from "./components/layout/AppHeader";
+import Admin from "./pages/Admin";
 
 export default function App() {
   return (
@@ -14,6 +15,10 @@ export default function App() {
       <Routes>
         {/* ✅ 첫 진입은 Home */}
         <Route path="/" element={<Home />} />
+        
+         {/* 어드민페이지*/}
+        <Route path="/admin" element={<Admin />} />
+
 
         {/* 공개 페이지 */}
         <Route path="/login" element={<Login />} />

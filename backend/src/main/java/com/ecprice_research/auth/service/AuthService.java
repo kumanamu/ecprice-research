@@ -19,7 +19,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public String signup(SignupRequest req) {  // 🔥 void → String
+    public String signup(SignupRequest req) {
 
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -35,11 +35,13 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // 🔥 토큰 생성해서 반환
-        return jwtProvider.createToken(user.getId(), user.getEmail());
+        return jwtProvider.createToken(user.getId(), user.getEmail(), user.getRole().name());
     }
 
-    public String login(LoginRequest req) {
+    /**
+     * 로그인 - User 객체 반환
+     */
+    public User login(LoginRequest req) {
 
         User user = userRepository.findByEmail(req.getEmail())
                 .orElseThrow(() -> new AuthException("이메일 또는 비밀번호가 올바르지 않습니다."));
@@ -48,6 +50,6 @@ public class AuthService {
             throw new AuthException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
 
-        return jwtProvider.createToken(user.getId(), user.getEmail());
+        return user;  // ✅ User 객체 반환
     }
 }
