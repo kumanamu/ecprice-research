@@ -80,7 +80,7 @@ const LandingPage = () => {
       ctaButton: '계정 만들기'
     },
     jp: {
-      title1: '韓日',
+      title1: '日韓',
       title2: '価格比較',
       title3: '輸出入利益判断ツール',
       subtitle: '4つのプラットフォームを同時比較し、AIが最適な収益構造を提案します',
