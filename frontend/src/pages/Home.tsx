@@ -10,6 +10,7 @@ import ChartsSection from "../components/report/ChartsSection";
 import AiAnalysisPanel from "../components/report/AiAnalysisPanel";
 import Loader from "../components/common/Loader";
 import LoginRequiredModal from "../components/common/LoginRequiredModal";
+import LandingPage from "./LandingPage";
 
 import { useLang } from "../context/LangContext";
 import { useAuth } from "../context/AuthContext";
@@ -46,6 +47,11 @@ export default function Home() {
   const [selectedData, setSelectedData] = useState<PriceInfo | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  // ✅ 비로그인 시 랜딩 페이지 표시 (hooks 이후에)
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
 
   const startSearch = () => {
     if (!keyword.trim()) return;
